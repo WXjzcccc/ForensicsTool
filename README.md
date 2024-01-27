@@ -4,7 +4,7 @@
 ```
 usage: ForensicsTool.py [-h] [-m MODE] [-f FILE] [-t TYPE] [-p PASSWORD] [--uin UIN] [--imei IMEI] [--wxid WXID] [--token TOKEN] [--device DEVICE]
 
-Forensics Tools
+Forensics Tool
 
 optional arguments:
   -h, --help            show this help message and exit
