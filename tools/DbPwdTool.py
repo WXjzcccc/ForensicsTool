@@ -2,6 +2,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode,b64encode
 import hashlib
+from .PrintTool import *
 
 class DbPwdTool:
     def __init__(self) -> None:
@@ -30,11 +31,11 @@ class DbPwdTool:
             msg = unpad(msg,AES.block_size).decode("gbk")
             flag = 1
         pwd = msg.split("|")[-1]
-        print(f'\033[32m[成功]---->获取到数据库密钥\033[33m[{pwd}]\033[0m')
+        print_green_key(f'[成功]---->获取到数据库密钥',pwd)
         if flag == 1:
-            print('\033[31m[注意]---->该数据库为老版本，请选择SQLCipher3进行解密!\033[0m')
+            print_red('[注意]---->该数据库为老版本，请选择SQLCipher3进行解密!')
         else:
-            print('\033[31m[注意]---->该数据库为新版本，请选择SQLCipher4进行解密!\033[0m')
+            print_red('[注意]---->该数据库为新版本，请选择SQLCipher4进行解密!')
         return pwd
 
     # class Skred:
@@ -90,11 +91,11 @@ class DbPwdTool:
         @uin            uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值
         @imei           微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF
         """
-        print(f'[提示]---->正在计算微信数据库密钥')
+        print(f'[提示]---->正在计算微信数据库EnMicroMsg.db密钥')
         md5 = hashlib.md5()
         md5.update((imei+uin).encode())
         pwd = md5.hexdigest()[:7]
-        print(f'\033[32m[成功]---->获取到数据库密钥\033[33m[{pwd}]\033[0m')
+        print_green_key('[成功]---->获取到数据库密钥',pwd)
         return pwd
 
     def wechat_index(self,uin :str, wxid :str, imei :str='1234567890ABCDEF'):
@@ -109,6 +110,6 @@ class DbPwdTool:
         md5 = hashlib.md5()
         md5.update((uin+imei+wxid).encode())
         pwd = md5.hexdigest()[:7]
-        print(f'\033[32m[成功]---->获取到索引数据库密钥\033[33m[{pwd}]\033[0m')
+        print_green_key(f'[成功]---->获取到索引数据库密钥',pwd)
         return pwd
     

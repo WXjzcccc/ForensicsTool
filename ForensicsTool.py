@@ -1,6 +1,7 @@
 import argparse
 from tools.DbPwdTool import DbPwdTool
 from tools.DbTool import DbTool
+from tools.PrintTool import print_red
 import sys
 import rich
 
@@ -42,7 +43,7 @@ rich.print("""
                                                             Author: WXjzc""")
 if args.mode == 0:
     if check_arg(args.file):
-        print('\033[31m[错误]---->该模式不支持file！\033[0m')
+        print_red('[错误]---->该模式不支持file！')
         sys.exit(-1)
     dbPwdTool = DbPwdTool()
     uin = args.uin
@@ -56,7 +57,7 @@ if args.mode == 0:
             else:
                 dbPwdTool.wechat(uin)
         else:
-            print('\033[31m[错误]---->请给出uin！\033[0m')
+            print_red('[错误]---->请给出uin！')
     elif args.type == 2:
         if check_arg(uin) and check_arg(wxid):
             if check_arg(imei):
@@ -64,14 +65,14 @@ if args.mode == 0:
             else:
                 dbPwdTool.wechat_index(uin,wxid)
         else:
-            print('\033[31m[错误]---->请给出uin和wxid！\033[0m')
+            print_red('[错误]---->请给出uin和wxid！')
     elif args.type == 3:
         if check_arg(token):
             dbPwdTool.wildfire(token)
         else:
-            print('\033[31m[错误]---->请给出token！\033[0m')
+            print_red('[错误]---->请给出token！')
     else:
-        print('\033[31m[错误]---->不支持的type值！\033[0m')
+        print_red('[错误]---->不支持的type值！')
         sys.exit(-1)
 elif args.mode == 1:
     dbTool = DbTool()
@@ -79,34 +80,34 @@ elif args.mode == 1:
     key = args.password
     file = args.file
     if not check_arg(file):
-        print('\033[31m[错误]---->请给出file参数！\033[0m')
+        print_red('[错误]---->请给出file参数！')
         sys.exit(-1)
     if args.type == 1:
         if check_arg(key):
             dbTool.decrypt_EnMicroMsg(key,file)
         else:
-            print('\033[31m[错误]---->请给出解密密码！\033[0m')
+            print_red('[错误]---->请给出解密密码！')
     elif args.type == 2:
         if check_arg(key):
             dbTool.decrypt_FTS5IndexMicroMsg(key,file)
         else:
-            print('\033[31m[错误]---->请给出解密密码！\033[0m')
+            print_red('[错误]---->请给出解密密码！')
     elif args.type == 4:
         dbTool.decrypt_amap(file)
     elif args.type == 5:
         if check_arg(device) and len(device.split('/')) == 5:
             dbTool.decrypt_dingtalk(device,file)
         else:
-            print('\033[31m[错误]---->请给出正确格式的device！\033[0m')
+            print_red('[错误]---->请给出正确格式的device！')
     elif args.type == 6:
         if check_arg(key):
             dbTool.decrypt_SQLCipher4_default(key,file)
         else:
-            print('\033[31m[错误]---->请给出解密密码！\033[0m')
+            print_red('[错误]---->请给出解密密码！')
     elif args.type == 7:
         if check_arg(key):
             dbTool.decrypt_SQLCipher3_default(key,file)
         else:
-            print('\033[31m[错误]---->请给出解密密码！\033[0m')
+            print_red('[错误]---->请给出解密密码！')
     else:
-        print('\033[31m[错误]---->不支持的type值！\033[0m')
+        print_red('[错误]---->不支持的type值！')

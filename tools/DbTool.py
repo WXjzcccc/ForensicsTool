@@ -3,6 +3,7 @@ import os
 from Crypto.Cipher import AES
 import sqlite3
 import hashlib
+from .PrintTool import *
 
 class DbTool:
     def __init__(self) -> None:
@@ -17,10 +18,10 @@ class DbTool:
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print('\033[31m[失败]---->原因[缺少依赖<sqlite3.exe>！]\033[0m')
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
             return -1
-        print(f'\033[33m<微信数据库解密>\033[0m')
-        print(f'[提示]---->正在解密微信数据库EnMicroMsg.db，解密密钥为\033[33m[{key}]\033[0m')
+        print_yellow(f'<微信数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密微信数据库EnMicroMsg.db，解密密钥为',key)
         work_dir = os.getcwd()
         floder = os.path.realpath(path)
         floder = '\\'.join(floder.split('\\')[:-1])
@@ -31,20 +32,23 @@ class DbTool:
         err = result.stderr
         os.chdir(work_dir)
         if out.strip() == 'ok' and err == '':
-            print('\033[32m[成功]---->EnMicroMsg.db解密成功，解密后数据库在源文件同目录下EnMicroMsg_dec.db\033[0m')
+            print_green('[成功]---->EnMicroMsg.db解密成功，解密后数据库在源文件同目录下EnMicroMsg_dec.db')
             wxid = self.getWXid(path)
-            print(f'\033[32m[成功]---->提取到wxid为\033[33m[{wxid}]\033[0m')
+            print_green_key(f'[成功]---->提取到wxid为',wxid)
             return 1
         else:
-            print('\033[31m[失败]---->EnMicroMsg.db解密失败\033[0m')
+            print_red('[失败]---->EnMicroMsg.db解密失败')
             if err.strip().__contains__('already exists'):
-                print(f'\033[31m[失败]---->原因[数据库已解密过，解密后的文件已存在！]\033[0m')
-                wxid = self.getWXid(path)
-                print(f'\033[32m[成功]---->提取到wxid为\033[33m[{wxid}]\033[0m')
+                print_red(f'[失败]---->原因[数据库已解密过，解密后的文件已存在！]')
+                try:
+                    wxid = self.getWXid(path)
+                    print_green_key(f'[成功]---->提取到wxid为',wxid)
+                except:
+                    pass
             elif err.strip().__contains__('file is not a database'):
-                print(f'\033[31m[失败]---->原因[解密密钥或解密参数不正确！]\033[0m')
+                print_red(f'[失败]---->原因[解密密钥或解密参数不正确！]')
             else:
-                print(f'\033[31m[失败]---->原因[{err.strip()}]\033[0m')
+                print_red(f'[失败]---->原因[{err.strip()}]')
         return 0
     
     def decrypt_FTS5IndexMicroMsg(self,key :str,path: str) -> int:
@@ -56,10 +60,10 @@ class DbTool:
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print('\033[31m[失败]---->原因[缺少依赖<sqlite3.exe>！]\033[0m')
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
             return -1
-        print(f'\033[33m<微信数据库解密>\033[0m')
-        print(f'[提示]---->正在解密微信数据库FTS5IndexMicroMsg_encrypt.db，解密密钥为\033[33m[{key}]\033[0m')
+        print_yellow(f'<微信数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密微信数据库FTS5IndexMicroMsg_encrypt.db，解密密钥为',key)
         work_dir = os.getcwd()
         floder = os.path.realpath(path)
         floder = '\\'.join(floder.split('\\')[:-1])
@@ -70,16 +74,16 @@ class DbTool:
         err = result.stderr
         os.chdir(work_dir)
         if out.strip() == 'ok' and err == '':
-            print('\033[32m[成功]---->FTS5IndexMicroMsg_encrypt.db解密成功，解密后数据库在源文件同目录下FTS5IndexMicroMsg.db\033[0m')
+            print_green('[成功]---->FTS5IndexMicroMsg_encrypt.db解密成功，解密后数据库在源文件同目录下FTS5IndexMicroMsg.db')
             return 1
         else:
-            print('\033[31m[失败]---->FTS5IndexMicroMsg_encrypt.db解密失败\033[0m')
+            print_red('[失败]---->FTS5IndexMicroMsg_encrypt.db解密失败')
             if err.strip().__contains__('already exists'):
-                print(f'\033[31m[失败]---->原因[数据库已解密过，解密后的文件已存在！]\033[0m')
+                print_red(f'[失败]---->原因[数据库已解密过，解密后的文件已存在！]')
             elif err.strip().__contains__('file is not a database'):
-                print(f'\033[31m[失败]---->原因[解密密钥或解密参数不正确！]\033[0m')
+                print_red(f'[失败]---->原因[解密密钥或解密参数不正确！]')
             else:
-                print(f'\033[31m[失败]---->原因[{err.strip()}]\033[0m')
+                print_red(f'[失败]---->原因[{err.strip()}]')
         return 0
     
     class DBHelper:
@@ -115,7 +119,7 @@ class DbTool:
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print('\033[31m[失败]---->原因[缺少依赖<sqlite3.exe>！]\033[0m')
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
             return -1
         bname = os.path.basename(path)
         name = bname.split('.')[0]
@@ -123,23 +127,23 @@ class DbTool:
         floder = os.path.realpath(path)
         floder = '\\'.join(floder.split('\\')[:-1])
         os.chdir(floder)
-        print(f'\033[33m<SQLCipher4版本数据库解密>\033[0m')
-        print(f'[提示]---->正在解密数据库{bname}，解密密钥为\033[33m[{key}]\033[0m')
+        print_yellow(f'<SQLCipher4版本数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密数据库{bname}，解密密钥为',key)
         result = subprocess.run([sqlite3,path,f"PRAGMA key = '{key}';ATTACH DATABASE '{name}_dec.db' AS {name}_dec KEY '';SELECT sqlcipher_export('{name}_dec');DETACH DATABASE {name}_dec;"],capture_output=True, text=True)
         out = result.stdout
         err = result.stderr
         os.chdir(work_dir)
         if out.strip() == 'ok' and err == '':
-            print(f'\033[32m[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db\033[0m')
+            print_green(f'[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db')
             return 1
         else:
-            print(f'\033[31m[失败]---->{bname}解密失败\033[0m')
+            print_red(f'[失败]---->{bname}解密失败')
             if err.strip().__contains__('already exists'):
-                print(f'\033[31m[失败]---->原因[数据库已解密过，解密后的文件已存在！]\033[0m')
+                print_red(f'[失败]---->原因[数据库已解密过，解密后的文件已存在！]')
             elif err.strip().__contains__('file is not a database'):
-                print(f'\033[31m[失败]---->原因[解密密钥或解密参数不正确！]\033[0m')
+                print_red(f'[失败]---->原因[解密密钥或解密参数不正确！]')
             else:
-                print(f'\033[31m[失败]---->原因[{err.strip()}]\033[0m')
+                print_red(f'[失败]---->原因[{err.strip()}]')
         return 0
     
     def decrypt_SQLCipher3_default(self,key :str,path :str) -> int:
@@ -151,7 +155,7 @@ class DbTool:
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print('\033[31m[失败]---->原因[缺少依赖<sqlite3.exe>！]\033[0m')
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
             return -1
         bname = os.path.basename(path)
         name = bname.split('.')[0]
@@ -159,29 +163,29 @@ class DbTool:
         floder = os.path.realpath(path)
         floder = '\\'.join(floder.split('\\')[:-1])
         os.chdir(floder)
-        print(f'\033[33m<SQLCipher3版本数据库解密>\033[0m')
-        print(f'[提示]---->正在解密数据库{bname}，解密密钥为\033[33m[{key}]\033[0m')
+        print_yellow(f'<SQLCipher3版本数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密数据库{bname}，解密密钥为',key)
         result = subprocess.run([sqlite3,path,f"PRAGMA key = '{key}';PRAGMA cipher_page_size = 1024;PRAGMA kdf_iter = 64000;PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1;PRAGMA cipher_hmac_algorithm = HMAC_SHA1;ATTACH DATABASE '{name}_dec.db' AS {name}_dec KEY '';SELECT sqlcipher_export('{name}_dec');DETACH DATABASE {name}_dec;"],capture_output=True, text=True)
         out = result.stdout
         err = result.stderr
         os.chdir(work_dir)
         if out.strip() == 'ok' and err == '':
-            print(f'\033[32m[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db\033[0m')
+            print_green(f'[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db')
             return 1
         else:
-            print(f'\033[31m[失败]---->{bname}解密失败\033[0m')
+            print_red(f'[失败]---->{bname}解密失败')
             if err.strip().__contains__('already exists'):
-                print(f'\033[31m[失败]---->原因[数据库已解密过，解密后的文件已存在！]\033[0m')
+                print_red(f'[失败]---->原因[数据库已解密过，解密后的文件已存在！]')
             elif err.strip().__contains__('file is not a database'):
-                print(f'\033[31m[失败]---->原因[解密密钥或解密参数不正确！]\033[0m')
+                print_red(f'[失败]---->原因[解密密钥或解密参数不正确！]')
             else:
-                print(f'\033[31m[失败]---->原因[{err.strip()}]\033[0m')
+                print_red(f'[失败]---->原因[{err.strip()}]')
         return 0
 
     def decrypt_amap(self,file :str):
         if not os.path.exists(file):
             return '文件不存在！'
-        print('\033[33m<高德地图数据库解密>\033[0m')
+        print_yellow('<高德地图数据库解密>')
         print('[提示]---->正在获取数据库文件大小')
         size = hex(os.path.getsize(file)//1024)[2:]
         t = ''
@@ -193,13 +197,13 @@ class DbTool:
         key = 'a4a11bb9ef4b2f4c'
         # SQLite3固定文件头，16字节
         head = '53514C69746520666F726D6174203300'
-        print(f'[提示]---->正在解密高德数据库girf_sync.db，解密密钥为\033[33m[{key}]\033[0m')
+        print_yellow_key(f'[提示]---->正在解密高德数据库girf_sync.db，解密密钥为',key)
         path = os.path.abspath(file).replace('girf_sync.db','girf_sync_dec.db')
         sqlite3 = './lib/sqlite3.exe'
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print('缺少依赖<sqlite3.exe>！')
+            print_red('缺少依赖<sqlite3.exe>！')
             return -1
         with open(file,'rb') as fr:
             data = fr.read()
@@ -222,9 +226,9 @@ class DbTool:
             result = subprocess.run([sqlite3,path,".tables"],capture_output=True, text=True)
             err = result.stderr
             if err != '':
-                print('\033[31m[失败]---->girf_sync.db解密失败，未知原因，可能是更换了密钥！\033[0m')
+                print_red('[失败]---->girf_sync.db解密失败，未知原因，可能是更换了密钥！')
             else:
-                print('\033[32m[成功]---->girf_sync.db解密成功，解密后数据库在源文件同目录下girf_sync_dec.db\033[0m')
+                print_green('[成功]---->girf_sync.db解密成功，解密后数据库在源文件同目录下girf_sync_dec.db')
             os.chdir(work_dir)
 
     def decrypt_dingtalk(self,device :str, path :str):
@@ -237,7 +241,7 @@ class DbTool:
         info = device.split('/')
         cpu.remove(info[1])
         cpu.insert(0,info[1])
-        print('\033[33m<钉钉数据库解密>\033[0m')
+        print_yellow('<钉钉数据库解密>')
         bname = os.path.basename(path)
         wpath = os.path.abspath(path).replace(bname,bname.replace('.db','_dec.db'))
         for v in cpu:
@@ -247,7 +251,7 @@ class DbTool:
             md5 = hashlib.md5()
             md5.update(tmp_key.encode('utf8'))
             key = md5.hexdigest()[:16]
-            print(f'[提示]---->正在解密钉钉数据库{bname}，解密密钥为\033[33m[{key}]\033[0m')
+            print_yellow_key(f'[提示]---->正在解密钉钉数据库{bname}，解密密钥为',key)
             with open(path,'rb') as fr:
                 data = fr.read()
                 cipher = AES.new(key.encode('utf8'), AES.MODE_ECB)
@@ -256,8 +260,8 @@ class DbTool:
                 with open(wpath,'wb') as fw:
                     fw.write(dec_data)
                 if head == b'SQLite format 3\0':
-                    print(f'\033[32m[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{bname.replace(".db","_dec.db")}\033[0m')
+                    print_green(f'[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{bname.replace(".db","_dec.db")}')
                     return
                 else:
-                    print(f'\033[31m[失败]---->{bname}解密失败，解密密钥不正确！\033[0m')
-        print(f'\033[31m[失败]---->{bname}解密失败，未能找到密钥，请确认输入的内容！\033[0m')
+                    print_red(f'[失败]---->{bname}解密失败，解密密钥不正确！')
+        print_red(f'[失败]---->{bname}解密失败，未能找到密钥，请确认输入的内容！')
