@@ -38,54 +38,6 @@ class DbPwdTool:
             print_red('[注意]---->该数据库为新版本，请选择SQLCipher4进行解密!')
         return pwd
 
-    # class Skred:
-    #     def __init__(self,msg) -> None:
-    #         self.msg = msg
-    #         self.tscIndex = 0
-
-    #     def readInt(self,msg):
-    #         i5 = 0
-    #         i6 = 0
-    #         while i6 < 32:
-    #             read = msg[self.tscIndex]
-    #             self.tscIndex += 1
-    #             i5 = i5 | ((read&127) << i6)
-    #             if (read&128) == 0:
-    #                 return (-(i5&1)) ^ ((i5&0xffffffff) >> 1)
-    #             i6 += 7
-    #         return 0
-
-    #     def readLong(self,msg):
-    #         i5 = 0
-    #         i6 = 0
-    #         while i6 < 64:
-    #             read = msg[self.tscIndex]
-    #             self.tscIndex += 1
-    #             i5 = i5 | ((read&127) << i6)
-    #             if (read&128) == 0:
-    #                 return (-(i5&1)) ^ ((i5&0xffffffff) >> 1)
-    #             i6 += 7
-    #         return 0
-
-    # def skred(self,tsc: str):
-    #     """
-    #     @tsc            TwinlifeSecuredConfiguration的值，在shared_prefs/TwinlifeSecuredPreferences.xml文件中
-    #     """
-    #     # 输入的tsc需要用密钥解密，密钥存储在AndroidKeyStore当中，暂时无法获取
-    #     msg = b64decode(tsc)
-    #     sk = self.Skred(msg)
-    #     # mint = self.readInt(msg)
-    #     print(sk.readLong(msg))
-    #     print(sk.readLong(msg))
-    #     mint = sk.readInt(msg)
-    #     print(mint)
-    #     if mint == 1:
-    #         print(sk.readInt(msg))
-    #         length = sk.readInt(msg)
-    #         arr = [0]*length
-
-    #     return 0
-
     def wechat(self,uin :str,imei :str='1234567890ABCDEF'):
         """
         @uin            uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值

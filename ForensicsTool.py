@@ -1,9 +1,13 @@
-import argparse
+import argparse,textwrap
 from tools.DbPwdTool import DbPwdTool
 from tools.DbTool import DbTool
+from tools.NavicatTool import analyzeNavicat
 from tools.PrintTool import print_red
+from tools.MobaTool import analyzeMoba
+from tools.DBeaverTool import analyzeDbeaer
 import sys
 import rich
+import os
 
 def check_arg(arg):
     if arg is None or arg == '':
@@ -11,13 +15,17 @@ def check_arg(arg):
     return True
 
 # 创建 ArgumentParser 对象
-parser = argparse.ArgumentParser(description='''
+parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''
 Forensics Tools''')
 
 # 添加命令行参数
-parser.add_argument('-m','--mode', type=int,help='指定需要运行的内容，为0表示计算密钥，为1表示解密数据库')
-parser.add_argument('-f', '--file', type=str, help='指定需要解密的数据库')
-parser.add_argument('-t', '--type', type=int, help='''
+parser.add_argument('-m','--mode', type=int,help='''
+指定需要运行的模式:
+    [0]表示计算密钥，支持的type值为1-3
+    [1]表示解密数据库，支持的type值为1、2、4-7
+    [2]表示数据提取，支持的type值为8-10''')
+parser.add_argument('-f', '--file', type=str,help='指定需要解密的数据库')
+parser.add_argument('-t', '--type', type=int,help='''
 指定需要处理的内容:
     [1]微信的EnMicroMsg.db
     [2]微信的FTS5IndexMicroMsg_encrypt.db
@@ -25,7 +33,10 @@ parser.add_argument('-t', '--type', type=int, help='''
     [4]高德的girf_sync.db
     [5]钉钉的数据库
     [6]SQLCipher4加密的数据库
-    [7]SQLCipher3加密的数据库''')
+    [7]SQLCipher3加密的数据库
+    [8]Navicat连接信息提取，需指定-f为目标用户的注册表文件"NTUSER.DAT"
+    [9]MobaXterm连接信息解密，可以指定MobaXterm.ini配置文件或用户注册表文件"NTUSER.DAT"，解密需要给出主密码
+    [10]Dbeaver连接信息解密，指定-f为目标文件data-sources.json和credentials-config.json的父目录''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
 parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空')
@@ -109,5 +120,43 @@ elif args.mode == 1:
             dbTool.decrypt_SQLCipher3_default(key,file)
         else:
             print_red('[错误]---->请给出解密密码！')
+    else:
+        print_red('[错误]---->不支持的type值！')
+elif args.mode == 2:
+    file = args.file
+    password = args.password
+    if args.type == 8:
+        f = open(file,'rb')
+        head = f.read(4)
+        f.close()
+        if head == b'regf' and os.path.basename(file) == 'NTUSER.DAT':
+            analyzeNavicat(file)
+        else:
+            print_red('[错误]---->不是NTUSER注册表文件！')
+    elif args.type == 9:
+        if check_arg(password):
+            f = open(file,'rb')
+            head = f.read(4)
+            f.close()
+            try:
+                if head == b'regf' and os.path.basename(file) == 'NTUSER.DAT':
+                    analyzeMoba(file,password,0)
+                elif os.path.basename(file).startswith('MobaXterm') and os.path.basename(file).endswith('.ini'):
+                    analyzeMoba(file,password,1)
+                else:
+                    print_red('[错误]---->不是待分析的文件，请给出NTUSER注册表文件或MobaXterm.ini配置文件！')
+            except:
+                print_red('[错误]---->masterkey不正确！')
+        else:
+            print_red('[错误]---->必须给出-p参数，MobaXterm的masterkey！')
+    elif args.type == 10:
+        if os.path.isdir(file):
+            dirs = os.listdir(file)
+            if 'credentials-config.json' in dirs and 'data-sources.json' in dirs:
+                analyzeDbeaer(file)
+            else:
+                print_red('[错误]---->目录中找不到credentials-config.json和data-sources.json文件')
+        else:
+            print_red('[错误]---->请指定目录，而不是文件')
     else:
         print_red('[错误]---->不支持的type值！')
