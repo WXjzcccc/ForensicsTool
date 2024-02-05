@@ -16,7 +16,7 @@ def check_arg(arg):
 
 # 创建 ArgumentParser 对象
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''
-Forensics Tools''')
+Forensics Tool''')
 
 # 添加命令行参数
 parser.add_argument('-m','--mode', type=int,help='''
