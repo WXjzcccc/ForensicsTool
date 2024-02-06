@@ -1,13 +1,46 @@
-import base64
-import random
-import plyvel
+import jpype
+from base64 import b64decode
+import os
+import json
+from .PrintTool import print_red,print_dict,print_yellow
 
-random.seed(114514)
-i = random.random()
-print(i)
+def decrypt(dics):
+    # 修改、编译自https://github.com/jas502n/FinalShellDecodePass
+    clazz = './lib/FinalShellDecodePass.class'
+    print('[提示]---->正在解密连接密码')
+    if os.path.exists(clazz) and os.path.isfile(clazz):
+        pass
+    else:
+        print_red('[失败]---->原因[缺少依赖<FinalShellDecodePass.class>！]')
+        return -1
+    jpype.startJVM()
+    jpype.addClassPath('../lib')
+    FinalShellDecodePass = jpype.JClass('FinalShellDecodePass')
+    finalShellDecodePass = FinalShellDecodePass()
+    for dic in dics:
+        encPwd = dic['密码']
+        b64c = b64decode(encPwd)
+        randomKey = finalShellDecodePass.ranDomKey(b64c[:8])
+        m = finalShellDecodePass.desDecode(b64c[8:], randomKey)
+        dic.update({'密码':m})
+    return dics
 
-db = plyvel.DB(r'C:\Users\admin\AppData\Roaming\tabby\Local Storage\leveldb', create_if_missing=False)
-
-for key,value in db.iterator():
-    print(key,value)
-db.close()
+def analyzeFinalShell(folder :str):
+    conns = []
+    print('[提示]---->正在提取FinalShell连接信息')
+    for root,dirs,files in os.walk(folder):
+        for file in files:
+            if file.endswith('_connect_config.json'):
+                path = os.path.join(root,file)
+                conn = {}
+                with open(path,'r') as fr:
+                    con_json = json.loads(fr.read())
+                    conn.update({'连接名':con_json['name']})
+                    conn.update({'地址':con_json['host']})
+                    conn.update({'端口':con_json['port']})
+                    conn.update({'用户名':con_json['user_name']})
+                    conn.update({'密码':con_json['password']})
+                conns.append(conn)
+    conns = decrypt(conns)
+    print_dict(conns,conns[0].keys(),'FinalShell连接信息')
+    print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')

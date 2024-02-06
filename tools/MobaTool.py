@@ -2,7 +2,7 @@ import base64
 from Crypto.Hash import SHA512
 from Crypto.Cipher import AES
 from Registry import Registry
-from .PrintTool import print_red,print_dict
+from .PrintTool import print_red,print_dict,print_yellow
 
 
 class MobaXtermCipher:
@@ -115,3 +115,4 @@ def analyzeMoba(file :str,masterkey :str,flag :int):
         credentials.append(credential)
     print_dict(passwords,passwords[0].keys(),'MobaXterm连接信息')
     print_dict(credentials,credentials[0].keys(),'MovaXterm凭据信息')
+    print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')

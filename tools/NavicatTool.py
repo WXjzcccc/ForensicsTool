@@ -400,4 +400,4 @@ def analyzeNavicat(reg :str):
         print_dict(records,records[0].keys(),title='Sqlite连接信息')
     except:
         pass
-    print_yellow('[提示]---->如果内容显示不全，请将终端全屏')
+    print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')

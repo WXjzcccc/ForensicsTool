@@ -5,6 +5,8 @@ from tools.NavicatTool import analyzeNavicat
 from tools.PrintTool import print_red
 from tools.MobaTool import analyzeMoba
 from tools.DBeaverTool import analyzeDbeaer
+from tools.FinalShellTool import analyzeFinalShell
+from tools.XshellTool import analyzeXshell
 import sys
 import rich
 import os
@@ -16,15 +18,19 @@ def check_arg(arg):
 
 # 创建 ArgumentParser 对象
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,description='''
-Forensics Tool''')
+   ____                      _           ______          __
+  / __/__  _______ ___  ___ (_)______   /_  __/__  ___  / /
+ / _// _ \/ __/ -_) _ \(_-</ / __(_-<    / / / _ \/ _ \/ / 
+/_/  \___/_/  \__/_//_/___/_/\__/___/   /_/  \___/\___/_/  
+                                                            Author: WXjzc''')
 
 # 添加命令行参数
 parser.add_argument('-m','--mode', type=int,help='''
 指定需要运行的模式:
     [0]表示计算密钥，支持的type值为1-3
     [1]表示解密数据库，支持的type值为1、2、4-7
-    [2]表示数据提取，支持的type值为8-10''')
-parser.add_argument('-f', '--file', type=str,help='指定需要解密的数据库')
+    [2]表示数据提取，支持的type值为8-11''')
+parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
 parser.add_argument('-t', '--type', type=int,help='''
 指定需要处理的内容:
     [1]微信的EnMicroMsg.db
@@ -36,7 +42,9 @@ parser.add_argument('-t', '--type', type=int,help='''
     [7]SQLCipher3加密的数据库
     [8]Navicat连接信息提取，需指定-f为目标用户的注册表文件"NTUSER.DAT"
     [9]MobaXterm连接信息解密，可以指定MobaXterm.ini配置文件或用户注册表文件"NTUSER.DAT"，解密需要给出主密码
-    [10]Dbeaver连接信息解密，指定-f为目标文件data-sources.json和credentials-config.json的父目录''')
+    [10]Dbeaver连接信息解密，指定-f为目标文件data-sources.json和credentials-config.json的父目录
+    [11]FinalShell连接信息解密，指定-f为目标文件夹conn，需要确保已经配置了JAVA_HOME环境变量
+    [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
 parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空')
@@ -158,5 +166,22 @@ elif args.mode == 2:
                 print_red('[错误]---->目录中找不到credentials-config.json和data-sources.json文件')
         else:
             print_red('[错误]---->请指定目录，而不是文件')
+    elif args.type == 11:
+        if os.path.isdir(file):
+            dirs = os.listdir(file)
+            analyzeFinalShell(file)
+        else:
+            print_red('[错误]---->请指定目录，而不是文件')
+    elif args.type == 12:
+        if os.path.isdir(file):
+            if check_arg(password):
+                dirs = os.listdir(file)
+                analyzeXshell(file,password)
+            else:
+                print_red('[错误]---->指定的用户名与sid不正确')
+        else:
+            print_red('[错误]---->请指定目录，而不是文件')
     else:
         print_red('[错误]---->不支持的type值！')
+else:
+    print_red('[错误]---->不支持的mode值！')
