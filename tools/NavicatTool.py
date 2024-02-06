@@ -143,12 +143,12 @@ def get_mysql_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_mysql_name':v.name()})
-            basic_info.update({'navicat_mysql_host':v.value('Host').value()})
-            basic_info.update({'navicat_mysql_port':v.value('Port').value()})
-            basic_info.update({'navicat_mysql_username':v.value('UserName').value()})
-            basic_info.update({'navicat_mysql_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_mysql_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
@@ -164,12 +164,12 @@ def get_mariadb_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_mariadb_name':v.name()})
-            basic_info.update({'navicat_mariadb_host':v.value('Host').value()})
-            basic_info.update({'navicat_mariadb_port':v.value('Port').value()})
-            basic_info.update({'navicat_mariadb_username':v.value('UserName').value()})
-            basic_info.update({'navicat_mariadb_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_mariadb_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
@@ -184,12 +184,12 @@ def get_mongodb_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_mongodb_name':v.name()})
-            basic_info.update({'navicat_mongodb_host':v.value('Host').value()})
-            basic_info.update({'navicat_mongodb_port':v.value('Port').value()})
-            basic_info.update({'navicat_mongodb_username':v.value('UserName').value()})
-            basic_info.update({'navicat_mongodb_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_mongodb_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
@@ -205,14 +205,14 @@ def get_sqlserver_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_sqlserver_name':v.name()})
-            basic_info.update({'navicat_sqlserver_host':v.value('Host').value()})
-            basic_info.update({'navicat_sqlserver_port':v.value('Port').value()})
-            basic_info.update({'navicat_sqlserver_username':v.value('UserName').value()})
-            basic_info.update({'navicat_sqlserver_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_sqlserver_db':v.value('InitialDatabase').value()})
-            basic_info.update({'navicat_sqlserver_path':v.value('QuerySavePath').value()})
-            basic_info.update({'navicat_sqlserver_auth':v.value('MSSQLAuthenMode').value()[3:]})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'默认数据库':v.value('InitialDatabase').value()})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'认证模式':v.value('MSSQLAuthenMode').value()[3:]})
         except:
             pass
         finally:
@@ -228,12 +228,12 @@ def get_oracle_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_oracle_name':v.name()})
-            basic_info.update({'navicat_oracle_host':v.value('Host').value()})
-            basic_info.update({'navicat_oracle_port':v.value('Port').value()})
-            basic_info.update({'navicat_oracle_username':v.value('UserName').value()})
-            basic_info.update({'navicat_oracle_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_oracle_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
@@ -249,12 +249,12 @@ def get_postgres_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_postgres_name':v.name()})
-            basic_info.update({'navicat_postgres_host':v.value('Host').value()})
-            basic_info.update({'navicat_postgres_port':v.value('Port').value()})
-            basic_info.update({'navicat_postgres_username':v.value('UserName').value()})
-            basic_info.update({'navicat_postgres_pwd':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'navicat_postgres_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'地址':v.value('Host').value()})
+            basic_info.update({'端口':v.value('Port').value()})
+            basic_info.update({'用户名':v.value('UserName').value()})
+            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
@@ -270,12 +270,12 @@ def get_sqlite_info(server_keys :list) -> dict:
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'navicat_sqlite_name':v.name()})
-            basic_info.update({'navicat_sqlite_file':v.value('DatabaseFileName').value()})
-            basic_info.update({'navicat_sqlite_isEn':'否' if v.value('SQLiteEncrypted').value()==0 else '是'})
-            basic_info.update({'navicat_sqlite_isSave':'否' if v.value('EncryptionSavePassword').value()=='false' else '是'})
-            basic_info.update({'navicat_sqlite_pwd':decryptPwd(v.value('EncryptionPassword').value())})
-            basic_info.update({'navicat_sqlite_path':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名':v.name()})
+            basic_info.update({'文件名':v.value('DatabaseFileName').value()})
+            basic_info.update({'是否加密':'否' if v.value('SQLiteEncrypted').value()==0 else '是'})
+            basic_info.update({'是否保存密码':'否' if v.value('EncryptionSavePassword').value()=='false' else '是'})
+            basic_info.update({'密码':decryptPwd(v.value('EncryptionPassword').value())})
+            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
         except:
             pass
         finally:
