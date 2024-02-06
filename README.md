@@ -49,5 +49,15 @@ optional arguments:
 
 ![Alt text](static/image-2.png)
 
+![Alt text](static/image-3.png)
+
+![Alt text](static/image-4.png)
+
+![Alt text](static/image-5.png)
+
+![Alt text](static/image-6.png)
+
+![Alt text](static/image-7.png)
+
 # 声明
 本工具仅用于电子数据取证的学习与研究，请勿用于非法用途，否则后果自负。
