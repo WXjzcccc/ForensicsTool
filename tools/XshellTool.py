@@ -14,6 +14,20 @@ def decrypt_string(sid :str, encPwd :str):
     else:
         return None
     
+def decrypt_string_new(sid :str, encPwd :str):
+    # 7.1+
+    v1 = base64.b64decode(encPwd)
+    index = sid.index('S-1-5')
+    username = sid[:index]
+    ssid = sid[index:]
+    key = (username[::-1]+ssid)[::-1]
+    v3 = ARC4.new(SHA256.new(key.encode('ascii')).digest()).decrypt(v1[:len(v1) - 0x20])
+    if SHA256.new(v3).digest() == v1[-32:]:
+        return v3.decode('ascii')
+    else:
+        return None
+
+
 def preDeal(file :str):
     print('[提示]---->正在处理配置文件')
     with open(file,'rb') as fr:
@@ -28,7 +42,7 @@ def delDeal(file :str):
     
 def analyzeXshell(foler :str,sid :str):
     conns = []
-    print('[提示]---->正在提取FinalShell连接信息')
+    print('[提示]---->正在提取XShell/XFtp连接信息')
     for root,dirs,files in os.walk(foler):
         for file in files:
             if file.endswith(r'.xsh'):
@@ -38,9 +52,13 @@ def analyzeXshell(foler :str,sid :str):
                 deal_file = preDeal(origin_file)
                 cf.read(deal_file,encoding='ansi')
                 conn.update({'连接名':os.path.basename(file).replace(r'.xsh','')})
+                version = cf.get('SessionInfo','Version')
                 conn.update({'地址':cf.get('CONNECTION','Host')})
                 conn.update({'端口':cf.get('CONNECTION','Port')})
-                conn.update({'密码':decrypt_string(sid,cf.get('CONNECTION:AUTHENTICATION','Password'))})
+                if version != '7.0' and version.startswith('7.'):
+                    conn.update({'密码':decrypt_string_new(sid,cf.get('CONNECTION:AUTHENTICATION','Password'))})
+                else:
+                    conn.update({'密码':decrypt_string(sid,cf.get('CONNECTION:AUTHENTICATION','Password'))})
                 conn.update({'描述':cf.get('CONNECTION','Description')})
                 delDeal(deal_file)
                 conns.append(conn)
@@ -53,7 +71,10 @@ def analyzeXshell(foler :str,sid :str):
                 conn.update({'连接名':os.path.basename(file).replace(r'.xfp','')})
                 conn.update({'地址':cf.get('Connection','Host')})
                 conn.update({'端口':cf.get('Connection','Port')})
-                conn.update({'密码':decrypt_string(sid,cf.get('Connection','Password'))})
+                if version != '7.0' and version.startswith('7.'):
+                    conn.update({'密码':decrypt_string_new(sid,cf.get('Connection','Password'))})
+                else:
+                    conn.update({'密码':decrypt_string(sid,cf.get('Connection','Password'))})
                 conn.update({'描述':cf.get('Connection','Description')})
                 delDeal(deal_file)
                 conns.append(conn)
