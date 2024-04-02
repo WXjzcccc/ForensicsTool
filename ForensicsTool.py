@@ -27,8 +27,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,d
 # 添加命令行参数
 parser.add_argument('-m','--mode', type=int,help='''
 指定需要运行的模式:
-    [0]表示计算密钥，支持的type值为1-3
-    [1]表示解密数据库，支持的type值为1、2、4-7
+    [0]表示计算密钥，支持的type值为1-3、13
+    [1]表示解密数据库，支持的type值为1、2、4-7、13
     [2]表示数据提取，支持的type值为8-11''')
 parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
 parser.add_argument('-t', '--type', type=int,help='''
@@ -44,13 +44,15 @@ parser.add_argument('-t', '--type', type=int,help='''
     [9]MobaXterm连接信息解密，可以指定MobaXterm.ini配置文件或用户注册表文件"NTUSER.DAT"，解密需要给出主密码
     [10]Dbeaver连接信息解密，指定-f为目标文件data-sources.json和credentials-config.json的父目录
     [11]FinalShell连接信息解密，指定-f为目标文件夹conn，需要确保已经配置了JAVA_HOME环境变量
-    [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid''')
+    [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid
+    [13]默往APP的msg.db，计算密钥时提供--uid参数''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
 parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空')
 parser.add_argument('--wxid', type=str, help='数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值')
 parser.add_argument('--token', type=str, help='野火IM系应用的用户token，shared_prefs/config.xml的token的值')
 parser.add_argument('--device', type=str, help='钉钉解密需要的内容，通常在shared_prefs/com.alibaba.android.rimet_preferences.xml中带有数据库名的字段的值中出现，如HUAWEI P40/armeabi-v7a/P40/qcom/HUAWEIP40')
+parser.add_argument('--uid', type=str, help='默往计算密钥需要的内容，通常在shared_prefs/im.xml中的uid的值')
 
 # 解析命令行参数
 args = parser.parse_args()
@@ -69,6 +71,7 @@ if args.mode == 0:
     imei = args.imei
     wxid = args.wxid
     token = args.token
+    uid = args.uid
     if args.type == 1:
         if check_arg(uin):
             if check_arg(imei):
@@ -90,6 +93,11 @@ if args.mode == 0:
             dbPwdTool.wildfire(token)
         else:
             print_red('[错误]---->请给出token！')
+    elif args.type == 13:
+        if check_arg(uid):
+            dbPwdTool.mostone(uid)
+        else:
+            print_red('[错误]---->请给出uid！')
     else:
         print_red('[错误]---->不支持的type值！')
         sys.exit(-1)
