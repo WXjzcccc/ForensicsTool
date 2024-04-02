@@ -65,3 +65,14 @@ class DbPwdTool:
         print_green_key(f'[成功]---->获取到索引数据库密钥',pwd)
         return pwd
     
+    def mostone(self,uid :str):
+        """
+        @uid            uid，在shared_prefs/im.xml文件中的uid的值
+        """
+        print(f'[提示]---->正在计算默往数据库msg.db密钥')
+        md5 = hashlib.md5()
+        md5.update((uid).encode())
+        pwd = md5.hexdigest()[:6].upper()
+        print_green_key('[成功]---->获取到数据库密钥',pwd)
+        print_red('[注意]---->请选择SQLCipher3进行解密!')
+        return pwd
