@@ -67,7 +67,7 @@ class DbPwdTool:
     
     def mostone(self,uid :str):
         """
-        @uid            uid，在shared_prefs/im.xml文件中的uid的值
+        @uid            uid，在shared_prefs/im.xml文件中的userId的值
         """
         print(f'[提示]---->正在计算默往数据库msg.db密钥')
         md5 = hashlib.md5()
