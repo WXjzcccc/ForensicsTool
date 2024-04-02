@@ -52,7 +52,7 @@ parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，�
 parser.add_argument('--wxid', type=str, help='数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值')
 parser.add_argument('--token', type=str, help='野火IM系应用的用户token，shared_prefs/config.xml的token的值')
 parser.add_argument('--device', type=str, help='钉钉解密需要的内容，通常在shared_prefs/com.alibaba.android.rimet_preferences.xml中带有数据库名的字段的值中出现，如HUAWEI P40/armeabi-v7a/P40/qcom/HUAWEIP40')
-parser.add_argument('--uid', type=str, help='默往计算密钥需要的内容，通常在shared_prefs/im.xml中的uid的值')
+parser.add_argument('--uid', type=str, help='默往计算密钥需要的内容，通常在shared_prefs/im.xml中的userId的值')
 
 # 解析命令行参数
 args = parser.parse_args()
