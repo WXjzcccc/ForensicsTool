@@ -6,19 +6,20 @@ usage: ForensicsTool.py [-h] [-m MODE] [-f FILE] [-t TYPE] [-p PASSWORD] [--uin 
 
    ____                      _           ______          __
   / __/__  _______ ___  ___ (_)______   /_  __/__  ___  / /
- / _// _ \/ __/ -_) _ \(_-</ / __(_-<    / / / _ \/ _ \/ / 
-/_/  \___/_/  \__/_//_/___/_/\__/___/   /_/  \___/\___/_/  
+ / _// _ \/ __/ -_) _ \(_-</ / __(_-<    / / / _ \/ _ \/ /
+/_/  \___/_/  \__/_//_/___/_/\__/___/   /_/  \___/\___/_/
                                                             Author: WXjzc
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m MODE, --mode MODE  
+  -m MODE, --mode MODE
                         指定需要运行的模式:
                             [0]表示计算密钥，支持的type值为1-3、13
                             [1]表示解密数据库，支持的type值为1、2、4-7、13
                             [2]表示数据提取，支持的type值为8-11
+                            [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件
   -f FILE, --file FILE  指定需要处理的文件
-  -t TYPE, --type TYPE  
+  -t TYPE, --type TYPE
                         指定需要处理的内容:
                             [1]微信的EnMicroMsg.db
                             [2]微信的FTS5IndexMicroMsg_encrypt.db
