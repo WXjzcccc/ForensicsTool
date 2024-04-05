@@ -7,6 +7,7 @@ from tools.MobaTool import analyzeMoba
 from tools.DBeaverTool import analyzeDbeaer
 from tools.FinalShellTool import analyzeFinalShell
 from tools.XshellTool import analyzeXshell
+from tools.WinTool import analyzeWin
 import sys
 import rich
 import os
@@ -29,7 +30,8 @@ parser.add_argument('-m','--mode', type=int,help='''
 指定需要运行的模式:
     [0]表示计算密钥，支持的type值为1-3、13
     [1]表示解密数据库，支持的type值为1、2、4-7、13
-    [2]表示数据提取，支持的type值为8-11''')
+    [2]表示数据提取，支持的type值为8-11
+    [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件''')
 parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
 parser.add_argument('-t', '--type', type=int,help='''
 指定需要处理的内容:
@@ -141,6 +143,9 @@ elif args.mode == 1:
 elif args.mode == 2:
     file = args.file
     password = args.password
+    if not check_arg(file):
+        print_red('[错误]---->请给出file参数！')
+        sys.exit(-1)
     if args.type == 8:
         f = open(file,'rb')
         head = f.read(4)
@@ -191,5 +196,24 @@ elif args.mode == 2:
             print_red('[错误]---->请指定目录，而不是文件')
     else:
         print_red('[错误]---->不支持的type值！')
+elif args.mode == 3:
+    file = args.file
+    dic = {}
+    if not check_arg(file):
+        print_red('[错误]---->请给出file参数！')
+        sys.exit(-1)
+    if os.path.isdir(file):
+        dirs = os.listdir(file)
+        if 'NTUSER.DAT' in dirs:
+            dic.update({'NTUSER':file+'/NTUSER.DAT'})
+        if 'SAM' in dirs:
+            dic.update({'SAM':file+'/SAM'})
+        if 'SYSTEM' in dirs:
+            dic.update({'SYSTEM':file+'/SYSTEM'})
+        if 'SOFTWARE' in dirs:
+            dic.update({'SOFTWARE':file+'/SOFTWARE'})
+        analyzeWin(dic)
+    else:
+        print_red('[错误]---->请指定目录，而不是文件')
 else:
     print_red('[错误]---->不支持的mode值！')
