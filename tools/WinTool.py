@@ -96,7 +96,7 @@ class WinTool:
         reg = Registry.Registry(self._software)
         root_key = reg.open(r'Microsoft\Windows NT\CurrentVersion')
         system_info.update({'Build信息':root_key.value('BuildLabEx').value()})
-        system_info.update({'版本信息':root_key.value('CurrentBuild').value()})
+        system_info.update({'版本信息':root_key.value('EditionID').value()})
         system_info.update({'安装时间(本地时区)':self.timestamp(root_key.value('InstallDate').value())})
         system_info.update({'系统名称':root_key.value('ProductName').value()})
         system_info.update({'发行ID':root_key.value('ReleaseID').value()})
