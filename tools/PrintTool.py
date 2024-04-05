@@ -37,3 +37,13 @@ def print_dict(dics :list ,head :list ,title :str=''):
         table.add_row(*[str(dic[column_name]) for column_name in dic.keys()])
     table.auto_width = True
     console.print(table)
+
+def print_table(dic :dict ,title :str=''):
+    console = Console()
+    table = Table(show_header=True, header_style="bold green", title=f'<{title}>', title_style='yellow')
+    table.add_column('名称', style="cyan" ,justify="center")
+    table.add_column('值', style="cyan" ,justify="center")
+    for k,v in dic.items():
+        table.add_row(k,v)
+    table.auto_width = True
+    console.print(table)
