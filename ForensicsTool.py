@@ -8,6 +8,7 @@ from tools.DBeaverTool import analyzeDbeaer
 from tools.FinalShellTool import analyzeFinalShell
 from tools.XshellTool import analyzeXshell
 from tools.WinTool import analyzeWin
+from tools.UTools import analyzeUTools
 import sys
 import rich
 import os
@@ -30,7 +31,7 @@ parser.add_argument('-m','--mode', type=int,help='''
 指定需要运行的模式:
     [0]表示计算密钥，支持的type值为1-3、13
     [1]表示解密数据库，支持的type值为1、2、4-7、13
-    [2]表示数据提取，支持的type值为8-11
+    [2]表示数据提取，支持的type值为8-12、14
     [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件''')
 parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
 parser.add_argument('-t', '--type', type=int,help='''
@@ -47,7 +48,8 @@ parser.add_argument('-t', '--type', type=int,help='''
     [10]Dbeaver连接信息解密，指定-f为目标文件data-sources.json和credentials-config.json的父目录
     [11]FinalShell连接信息解密，指定-f为目标文件夹conn，需要确保已经配置了JAVA_HOME环境变量
     [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid
-    [13]默往APP的msg.db，计算密钥时提供--uid参数''')
+    [13]默往APP的msg.db，计算密钥时提供--uid参数
+    [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
 parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空')
@@ -192,6 +194,14 @@ elif args.mode == 2:
                 analyzeXshell(file,password)
             else:
                 print_red('[错误]---->指定的用户名与sid不正确')
+        else:
+            print_red('[错误]---->请指定目录，而不是文件')
+    elif args.type == 14:
+        if os.path.isdir(file):
+            if check_arg(password):
+                analyzeUTools(file,password)
+            else:
+                print_red('[错误]---->请指定密码')
         else:
             print_red('[错误]---->请指定目录，而不是文件')
     else:
