@@ -34,14 +34,14 @@ optional arguments:
                             [11]FinalShell连接信息解密，指定-f为目标文件夹conn，需要确保已经配置了JAVA_HOME环境变量
                             [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid
                             [13]默往APP的msg.db，计算密钥时提供--uid参数
-                            [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥
+                            [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥，解密超级剪贴板的数据请指定-p参数值为super
   -p PASSWORD, --password PASSWORD
                         解密的密码，处理钉钉和高德时不适用
   --uin UIN             微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值
   --imei IMEI           微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空
-  --wxid WXID           数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值
+  --wxid WXID           数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值     
   --token TOKEN         野火IM系应用的用户token，shared_prefs/config.xml的token的值
-  --device DEVICE       钉钉解密需要的内容，通常在shared_prefs/com.alibaba.android.rimet_preferences.xml中带有数据库名的字段的值中出现，如HUAWEI P40/armeabi-v7a/P40/qcom/HUAWEIP40
+  --device DEVICE       钉钉解密需要的内容，通常在shared_prefs/com.alibaba.android.rimet_preferences.xml中带有数据库名的字段的值中出现，如HUAWEI P40/armeabi-v7a/P40/qcom/HUAWEIP40   
   --uid UID             默往计算密钥需要的内容，通常在shared_prefs/im.xml中的userId的值
 ```
 
