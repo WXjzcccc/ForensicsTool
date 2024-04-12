@@ -107,7 +107,21 @@ class UToolsCipher:
         cipher = AES.new(bytes.fromhex(self._SUPER_KEY), AES.MODE_CBC, bytes.fromhex(IV))
         decrypted = cipher.decrypt(bytes.fromhex(encrypted_data))
         return unpad(decrypted,AES.block_size).decode("utf8")
-    
+
+    def parseImages(self,path):
+        _dir = self.clipboard_data+'/wxjzc_images'
+        if not os.path.exists(_dir):
+            if not os.path.isdir(_dir):
+                os.mkdir(_dir)
+        if not os.path.dirname(path).endswith('wxjzc_images'):
+            with open(path,'r',encoding='utf8') as fr:
+                data = fr.read()
+                img_data = data.split(',')[1]
+                ext = data[11:].split(';')[0]
+                fname = os.path.basename(path)
+                with open(os.path.join(_dir,fname+'.'+ext),'wb') as fw:
+                    fw.write(b64decode(img_data))
+
     def parseSuper(self):
         text_dict = []
         file_dict = []
@@ -115,6 +129,8 @@ class UToolsCipher:
         id = 0
         for root,dirs,files in os.walk(self.clipboard_data):          
             for file in files:
+                if file.startswith('image_'):
+                    self.parseImages(os.path.join(root,file))
                 if file == 'data':
                     path = os.path.join(root,file)
                     with open(path,'r',encoding='utf8') as fr:
