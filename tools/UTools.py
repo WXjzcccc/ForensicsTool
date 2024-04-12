@@ -1,5 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
+from base64 import b64decode
 import os
 import json
 import datetime
@@ -8,6 +9,7 @@ from .PrintTool import *
 class UToolsCipher:
     _AES_KEY = ""
     _AES_IV = "UTOOLS0123456789"
+    _SUPER_KEY = "e87e4c85ae6667a8c2da6ad72617ea6d029b4973e23e5c20fb745ccc74c9a9d6"
     clipboard_data = ""
     dec_path = ""
     def __init__(self,clipboard_data :str, key :str):
@@ -45,20 +47,23 @@ class UToolsCipher:
         formatted_date = target_time.strftime('%Y-%m-%d %H:%M:%S.%f')
         return formatted_date
         
-    def parse(self) -> list:
+    def parse(self):
         text_dict = []
         file_dict = []
         image_dict = []
+        id = 0
         json_lst = self.analyze()
         for data in json_lst:
             json_data = json.loads(data)
             time = self.my_timestamp(json_data['timestamp'])
             hash = json_data['hash']
+            id += 1
             if json_data["type"] == 'text':
                 value = json_data['value']
                 if len(value) > 100:
                     value = value[:100]+'...'
                 text_dict.append({
+                    "ID":id,
                     "内容":value,
                     "时间":time,
                     "哈希值":hash
@@ -74,6 +79,7 @@ class UToolsCipher:
                     ftype += '\n'
                     path += v['path']+'\n'
                 file_dict.append({
+                    "ID":id,
                     "类型":ftype[:-1],
                     "名称":name[:-1],
                     "路径":path[:-1],
@@ -83,17 +89,110 @@ class UToolsCipher:
             elif json_data["type"] == 'image':
                 size = json_data['size']
                 image_dict.append({
+                    "ID":id,
                     "文件名":hash,
                     "文件大小":size,
                     "时间":time
                 })
-        print_dict(text_dict,text_dict[0].keys(),title='文本内容')
-        print_dict(file_dict,file_dict[0].keys(),title='文件内容')
-        print_dict(image_dict,image_dict[0].keys(),title='图片内容')
-        print_yellow('时间之间有空白表示一条记录有多个文件！')
-        print_yellow('受数据长度影响，部分内容无法完整展示，解密后的数据已经保存到同目录下的_deccypt.txt结尾的文件中！')
+        if text_dict !=[]:
+            print_dict(text_dict,text_dict[0].keys(),title='文本内容')
+        if file_dict !=[]:
+            print_dict(file_dict,file_dict[0].keys(),title='文件内容')
+        if image_dict !=[]:
+            print_dict(image_dict,image_dict[0].keys(),title='图片内容')
+        print_yellow('[提示]---->时间之间有空白表示一条记录有多个文件！')
+        print_yellow('[提示]---->受数据长度影响，部分内容无法完整展示，解密后的数据已经保存到同目录下的_deccypt.txt结尾的文件中！')
+
+    def decrypt_super(self,encrypted_data :str,IV :str) -> str:
+        cipher = AES.new(bytes.fromhex(self._SUPER_KEY), AES.MODE_CBC, bytes.fromhex(IV))
+        decrypted = cipher.decrypt(bytes.fromhex(encrypted_data))
+        return unpad(decrypted,AES.block_size).decode("utf8")
+    
+    def parseSuper(self):
+        text_dict = []
+        file_dict = []
+        image_dict = []
+        id = 0
+        for root,dirs,files in os.walk(self.clipboard_data):          
+            for file in files:
+                if file == 'data':
+                    path = os.path.join(root,file)
+                    with open(path,'r',encoding='utf8') as fr:
+                        with open(os.path.join(root,file+'_decrypt.txt'),'w',encoding='utf8') as fw:
+                            data = fr.readlines()
+                            for v in data:
+                                id += 1
+                                line = v.split(' ')
+                                time = self.my_timestamp(line[1])
+                                hash = line[2].strip()
+                                if line[0] == 'image':
+                                    image_dict.append({
+                                        "ID":id,
+                                        "文件名":hash,
+                                        "时间":time
+                                    })
+                                    fw.write(str({"类型":'图片',"时间":time,"哈希值":hash})+'\n')
+                                elif line[0] == 'file':
+                                    values = json.loads(b64decode(line[3]).decode('utf-8'))
+                                    name = ''
+                                    ftype = ''
+                                    path = ''
+                                    for v in values:
+                                        name += v['name']+'\n'
+                                        ftype += '文件' if v['isFile'] == True else '目录'
+                                        ftype += '\n'
+                                        path += v['path']+'\n'
+                                    file_dict.append({
+                                        "ID":id,
+                                        "类型":ftype[:-1],
+                                        "名称":name[:-1],
+                                        "路径":path[:-1],
+                                        "时间":time,
+                                        "哈希值":hash
+                                    })
+                                    fw.write(str({
+                                        "类型":ftype[:-1],
+                                        "名称":name[:-1],
+                                        "路径":path[:-1],
+                                        "时间":time,
+                                        "哈希值":hash
+                                    })+'\n')
+                                elif line[0] == 'text':
+                                    value = line[3].strip()
+                                    sp = value.split(':')
+                                    iv = sp[0]
+                                    enc_data = sp[1]
+                                    msg = b64decode(self.decrypt_super(enc_data,iv)).decode('utf-8')
+                                    text_dict.append({
+                                        "ID":id,
+                                        "内容":msg if len(msg) <= 100 else msg[:97]+'...',
+                                        "时间":time,
+                                        "哈希值":hash
+                                    })
+                                    fw.write(str({
+                                        "内容":b64decode(self.decrypt_super(enc_data,iv)).decode('utf-8'),
+                                        "时间":time,
+                                        "哈希值":hash
+                                    })+'\n')
+        if text_dict !=[]:
+            try:
+                print_dict(text_dict,text_dict[0].keys(),title='文本内容')
+            except:
+                print_red('[错误]---->部分内容无法打印，请直接查看文件！')
+        if file_dict !=[]:
+            print_dict(file_dict,file_dict[0].keys(),title='文件内容')
+        if image_dict !=[]:
+            print_dict(image_dict,image_dict[0].keys(),title='图片内容')
+        # for v in text_dict:
+            # print_red(v)
+        print_yellow('[提示]---->时间之间有空白表示一条记录有多个文件！')
+        print_yellow('[提示]---->受数据长度影响，部分内容无法完整展示，解密后的数据已经保存到同目录下的_deccypt.txt结尾的文件中！')
         
 def analyzeUTools(path :str,key :str):
-    print('[提示]---->正在提取uTools剪贴板数据')
     u = UToolsCipher(path,key)
-    u.parse()
+    if key != 'super':
+        print('[提示]---->正在提取uTools剪贴板数据')
+        u.parse()
+    else:
+        print('[提示]---->正在提取uTools超级剪贴板数据')
+        u.parseSuper()
