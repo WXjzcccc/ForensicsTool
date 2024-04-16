@@ -199,8 +199,6 @@ class UToolsCipher:
             print_dict(file_dict,file_dict[0].keys(),title='文件内容')
         if image_dict !=[]:
             print_dict(image_dict,image_dict[0].keys(),title='图片内容')
-        # for v in text_dict:
-            # print_red(v)
         print_yellow('[提示]---->时间之间有空白表示一条记录有多个文件！')
         print_yellow('[提示]---->受数据长度影响，部分内容无法完整展示，解密后的数据已经保存到同目录下的_deccypt.txt结尾的文件中！')
         

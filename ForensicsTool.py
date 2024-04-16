@@ -214,8 +214,11 @@ elif args.mode == 3:
         sys.exit(-1)
     if os.path.isdir(file):
         dirs = os.listdir(file)
-        if 'NTUSER.DAT' in dirs:
-            dic.update({'NTUSER':file+'/NTUSER.DAT'})
+        ntuser = []
+        for v in dirs:
+            if v.endswith('.DAT'):
+                ntuser.append(file+f'/{v}')
+        dic.update({'NTUSER':ntuser})
         if 'SAM' in dirs:
             dic.update({'SAM':file+'/SAM'})
         if 'SYSTEM' in dirs:

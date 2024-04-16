@@ -2,3 +2,4 @@ pycryptodome
 rich
 python-registry
 jpype1
+construct

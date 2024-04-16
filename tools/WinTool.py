@@ -2,16 +2,17 @@ from Registry import Registry
 from .PrintTool import *
 import sys
 import datetime
+from construct import Struct, Bytes, CString
 
 class WinTool:
     _system = ''
-    _ntuser = ''
+    _ntuser = []
     _sam = ''
     _software = ''
 
     def __init__(self, hives :dict):
         self._system = hives['SYSTEM'] if 'SYSTEM' in hives.keys() else ''
-        self._ntuser = hives['NTUSER'] if 'NTUSER' in hives.keys() else ''
+        self._ntuser = hives['NTUSER'] if 'NTUSER' in hives.keys() else []
         self._sam = hives['SAM'] if 'SAM' in hives.keys() else ''
         self._software = hives['SOFTWARE'] if 'SOFTWARE' in hives.keys() else ''
 
@@ -46,11 +47,151 @@ class WinTool:
         shutdown_time = root_key.value('ShutdownTime').value()
         return self.timestamp_hex(shutdown_time)
 
-    # TODO 获取用户信息
+    # TODO 获取用户信息，待添加更多细节
     def get_users(self) -> dict:
+        def hex_key(key):
+            _key = hex(key)[2:]
+            return _key.upper().zfill(8)
         if self._sam == '':
-            print_red('没有给出SAM注册表文件!')
-            sys.exit(-1)
+            return '没有给出SAM注册表文件!'
+        if self._software == '':
+            return '没有给出SOFTWARE注册表文件!'
+        users = []
+        reg = Registry.Registry(self._sam)
+        root_key = reg.open(r'SAM\Domains\Account\Users')
+        sub_keys = root_key.subkey('Names')
+        for sub_key in sub_keys.subkeys():
+            dic = {}
+            username = sub_key.name()
+            vtype = sub_key.value('').value_type()
+            key = hex_key(vtype)
+            user_key = root_key.subkey(key)
+            logon_show = user_key.value('UserDontShowInLogonUI').value() if self.check_key('UserDontShowInLogonUI', user_key) else '是'
+            force_password = user_key.value('ForcePasswordReset').value() if self.check_key('ForcePasswordReset', user_key) else ''
+            hint = user_key.value('UserPasswordHint').value() if self.check_key('UserPasswordHint', user_key) else b'/'
+            expires = user_key.value('AccountExpires').value() if self.check_key('AccountExpires', user_key) else '/'
+            software_key = Registry.Registry(self._software).open('Microsoft\Windows NT\CurrentVersion\ProfileList')
+            sid = '/'
+            for v in software_key.subkeys():
+                if v.name().endswith(str(vtype)):
+                    sid = v.name()
+            if logon_show == b'\x01\x00\x00\x00':
+                logon_show = '否'
+            if force_password == b'\x01\x00\x00\x00':
+                force_password = '是'
+            else:
+                force_password = '否'
+            dic.update({
+                '用户名':username,
+                'SID':sid,
+                '是否显示在登录界面':logon_show,
+                '下次登录是否强制修改密码':force_password,
+                '密码提示':hint.decode('utf8'),
+                '过期时间':expires,
+                })
+            users.append(dic)
+        return users
+
+    def get_recent_name(self,data :bytes) -> bytes:
+        _ = b''
+        for i in range(0,len(data),2):
+            if data[i:i+2] == b'\x00\x00':
+                break
+            _ += data[i:i+2]
+        return _
+
+    def parsePIDL(self,data):
+        data = data.split(b"\x04\x00\xef\xbe")
+        counter = 0
+        path = ''
+        for d in data:
+            if counter == 0 :
+                letter = ''
+                if d.startswith(b'\x14\x00\x1F\x50\xE0\x4F\xD0\x20\xEA\x3A\x69\x10\xA2\xD8\x08\x00\x2B\x30\x30\x9D\x19\x00\x2F'):
+                    letter = d[23:25].decode()
+                path += letter
+            else:
+                format = Struct(
+                        'unkuwn'/Bytes(38),
+                        'Path' /CString("utf16")
+                    )
+                dd = format.parse(d)
+                path += "\\"+str(dd.Path)
+            counter = counter + 1
+        return path
+
+    def get_recent(self) -> list:
+        if self._ntuser == []:
+            return '没有给出NTUSER注册表文件!'
+        lst = []
+        for ntuser in self._ntuser:
+            reg = Registry.Registry(ntuser)
+            root_key = reg.open(r'Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs')
+            recent_docs = []
+            for sub_key in root_key.subkeys():
+                _type = sub_key.name()
+                for v in sub_key.values():
+                    if v.name() == 'MRUListEx':
+                        continue
+                    _ = self.get_recent_name(v.value())
+                    filename = _.decode('utf-16le')
+                    recent_docs.append({
+                        '类型':_type,
+                        '文件名':filename,
+                    })
+            lst.append([recent_docs,'最近访问的文档',ntuser])
+            root_key = reg.open(r'Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32')
+            recent_pro = []
+            program_key = root_key.subkey('CIDSizeMRU')
+            for v in program_key.values():
+                if v.name() == 'MRUListEx':
+                    continue
+                _ = self.get_recent_name(v.value())
+                filename = _.decode('utf-16le')
+                recent_pro.append({
+                    '程序':filename
+                })
+            program_key = root_key.subkey('LastVisitedPidlMRU')
+            for v in program_key.values():
+                if v.name() == 'MRUListEx':
+                    continue
+                _ = self.get_recent_name(v.value())
+                filename = _.decode('utf-16le')
+                if filename not in [x['程序'] for x in recent_pro]:
+                    recent_pro.append({
+                        '程序':filename
+                    })
+            lst.append([recent_pro,'最近打开的程序',ntuser])
+            recent_files = []
+            file_key = root_key.subkey('OpenSavePidlMRU')
+            for sub_key in file_key.subkeys():
+                for v in sub_key.values():
+                    if v.name() == 'MRUListEx':
+                        continue
+                    _ = self.parsePIDL(v.value())
+                    filename = _
+                    recent_files.append({
+                        '类型':sub_key.name(),
+                        '文件路径':filename
+                    })
+            # TODO 解决编码问题
+            lst.append([recent_files,'最近保存的文件',ntuser])
+        return lst
+
+    # TODO 解析最近使用的运行命令，解析开机自启动应用。。。
+
+    def get_system_name(self) -> str:
+        if self._system == '':
+            return '没有给出SYSTEM注册表文件!'
+        reg = Registry.Registry(self._system)
+        root_key = reg.open(r'ControlSet001\Control\ComputerName\ComputerName')
+        return root_key.value('ComputerName').value()
+
+    def get_login_user(self):
+        reg = Registry.Registry(self._software)
+        root_key = reg.open(r'Microsoft\Windows\CurrentVersion\Authentication\LogonUI')
+        return root_key.value('LastLoggedOnUser').value()
+
 
     def check_key(self, name :str, key :Registry.RegistryKey) -> bool:
         for v in key.values():
@@ -96,6 +237,7 @@ class WinTool:
         reg = Registry.Registry(self._software)
         root_key = reg.open(r'Microsoft\Windows NT\CurrentVersion')
         system_info.update({'Build信息':root_key.value('BuildLabEx').value()})
+        system_info.update({'计算机名称':self.get_system_name()})
         system_info.update({'版本信息':root_key.value('EditionID').value()})
         system_info.update({'安装时间(本地时区)':self.timestamp(root_key.value('InstallDate').value())})
         system_info.update({'系统名称':root_key.value('ProductName').value()})
@@ -106,6 +248,7 @@ class WinTool:
         system_info.update({'产品密钥备份(非当前密钥)':product_key.value('BackupProductKeyDefault').value()})
         system_info.update({'系统时区':self.get_timezone()})
         system_info.update({'上次正常关机时间(本地时区)':self.get_last_shutdown_time()})
+        system_info.update({'上次登录的用户':self.get_login_user()})
         return system_info
     
 
@@ -120,7 +263,8 @@ class WinTool:
         volumes = []
         for v in mount_key.values():
             if v.name().startswith(r'\DosDevices'):
-                _volume = str(v.value().replace(b'\x00', b''))[2:-1]
+                # _volume = str(v.value().replace(b'\x00', b''))[2:-1]
+                _volume = v.value().decode('utf-16le')
                 if _volume.__contains__('#'):
                     volume = _volume.split('#')[0]
                     if volume.startswith('{') and volume.endswith('}'):
@@ -128,18 +272,16 @@ class WinTool:
         for v in mount_key.values():
             if v.name()[10:] in volumes:
                 print('===========')
+        print(volumes)
 
 def analyzeWin(hives :dict):
     winTool = WinTool(hives)
     print_table(winTool.get_system_info(),title='系统信息')
     print_dict(winTool.get_net_info(),winTool.get_net_info()[0].keys(),title='网络信息')
-
-# if __name__ == '__main__':
-#     winTool = WinTool({'SYSTEM':r"C:\Users\Administrator\Desktop\workspace\source\SYSTEM",
-#         'NTUSER':r"C:\Users\Administrator\Desktop\workspace\source\NTUSER.DAT",
-#         'SAM':r"C:\Users\Administrator\Desktop\workspace\source\SAM",
-#         'SOFTWARE':r"C:\Users\Administrator\Desktop\workspace\source\SOFTWARE",
-#     })
-#     print_table(winTool.get_system_info(),title='系统信息')
-#     print_dict(winTool.get_net_info(),winTool.get_net_info()[0].keys(),title='网络信息')
-#     print(winTool.get_usb())
+    print_dict(winTool.get_users(),winTool.get_users()[0].keys(),title='用户信息')
+    recent_data = winTool.get_recent()
+    for v in recent_data:
+        print_dict(v[0],v[0][0].keys(),title=v[1]+f'[{v[2]}]')
+    # winTool.get_usb()
+    print_yellow('[提示]---->最近保存的文件中，如果没有父目录，请在用户的桌面、文档等地方查找文件')
+    print_yellow('[提示]---->会努力优化的。。')
