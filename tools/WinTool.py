@@ -192,6 +192,15 @@ class WinTool:
         root_key = reg.open(r'Microsoft\Windows\CurrentVersion\Authentication\LogonUI')
         return root_key.value('LastLoggedOnUser').value()
 
+    def get_default_browser(self) -> str:
+        if self._ntuser == []:
+            return '没有给出NTUSER注册表文件!'
+        lst = []
+        for ntuser in self._ntuser:
+            reg = Registry.Registry(ntuser)
+            root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
+            lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/',ntuser])
+        return lst
 
     def check_key(self, name :str, key :Registry.RegistryKey) -> bool:
         for v in key.values():
@@ -248,6 +257,7 @@ class WinTool:
         system_info.update({'系统时区':self.get_timezone()})
         system_info.update({'上次正常关机时间(本地时区)':self.get_last_shutdown_time()})
         system_info.update({'上次登录的用户':self.get_login_user()})
+        system_info.update({'默认浏览器':self.get_default_browser()[0][0] if self.get_default_browser() != [] else '/'})
         return system_info
     
 
