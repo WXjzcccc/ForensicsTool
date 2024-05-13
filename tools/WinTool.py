@@ -196,10 +196,13 @@ class WinTool:
         if self._ntuser == []:
             return '没有给出NTUSER注册表文件!'
         lst = []
-        for ntuser in self._ntuser:
-            reg = Registry.Registry(ntuser)
-            root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
-            lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/',ntuser])
+        try:
+            for ntuser in self._ntuser:
+                reg = Registry.Registry(ntuser)
+                root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
+                lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/',ntuser])
+        except:
+            lst = ['/',ntuser]
         return lst
 
     def check_key(self, name :str, key :Registry.RegistryKey) -> bool:
@@ -290,7 +293,8 @@ def analyzeWin(hives :dict):
     print_dict(winTool.get_users(),winTool.get_users()[0].keys(),title='用户信息')
     recent_data = winTool.get_recent()
     for v in recent_data:
-        print_dict(v[0],v[0][0].keys(),title=v[1]+f'[{v[2]}]')
+        if len(v[0]) > 0:
+            print_dict(v[0],v[0][0].keys(),title=v[1]+f'[{v[2]}]')
     # winTool.get_usb()
     print_yellow('[提示]---->最近保存的文件中，如果没有父目录，请在用户的桌面、文档等地方查找文件')
     print_yellow('[提示]---->会努力优化的。。')
