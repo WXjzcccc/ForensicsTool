@@ -51,7 +51,7 @@ def getEncFromIni(file :str) -> dict:
                 for v in tmp:
                     passwords.append(v.strip())
                 ff = True
-            if i > ci and not cf:
+            if i > ci and not cf and ci != 0:
                 tmp = data[ci+1:i]
                 for v in tmp:
                     credentials.append(v.strip())
@@ -113,6 +113,9 @@ def analyzeMoba(file :str,masterkey :str,flag :int):
         credential.update({'用户名':t[0]})
         credential.update({'保存的密码':cipher.decrypt_password(t[1])})
         credentials.append(credential)
-    print_dict(passwords,passwords[0].keys(),'MobaXterm连接信息')
-    print_dict(credentials,credentials[0].keys(),'MovaXterm凭据信息')
+    try:
+        print_dict(passwords,passwords[0].keys(),'MobaXterm连接信息')
+        print_dict(credentials,credentials[0].keys(),'MovaXterm凭据信息')
+    except:
+        pass
     print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')
