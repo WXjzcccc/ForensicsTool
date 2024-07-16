@@ -76,3 +76,13 @@ class DbPwdTool:
         print_green_key('[成功]---->获取到数据库密钥',pwd)
         print_red('[注意]---->请选择SQLCipher3进行解密!')
         return pwd
+
+    def tiktok(self,uid :str):
+        '''
+        @uid            uid，一般在数据库文件名中就有
+        '''
+        print(f'[提示]---->正在计算抖音数据库密钥')
+        pwd = f'byte{uid}imwcdb{uid}dance'
+        print_green_key('[成功]---->获取到数据库密钥',pwd)
+        print_red('[注意]---->请选择wcdb进行解密!')
+        return pwd

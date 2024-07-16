@@ -29,8 +29,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,d
 # 添加命令行参数
 parser.add_argument('-m','--mode', type=int,help='''
 指定需要运行的模式:
-    [0]表示计算密钥，支持的type值为1-3、13
-    [1]表示解密数据库，支持的type值为1、2、4-7、13
+    [0]表示计算密钥，支持的type值为1-3、13、16
+    [1]表示解密数据库，支持的type值为1、2、4-7、15
     [2]表示数据提取，支持的type值为8-12、14
     [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件''')
 parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
@@ -49,7 +49,10 @@ parser.add_argument('-t', '--type', type=int,help='''
     [11]FinalShell连接信息解密，指定-f为目标文件夹conn，需要确保已经配置了JAVA_HOME环境变量
     [12]XShell、XFtp连接信息解密，指定-f为目标文件夹session，并提供-p参数，值为计算机的用户名+sid
     [13]默往APP的msg.db，计算密钥时提供--uid参数
-    [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥，解密超级剪贴板的数据请指定-p参数值为super''')
+    [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥，解密超级剪贴板的数据请指定-p参数值为super
+    [15]wcdb加密的数据库
+    [16]抖音的聊天数据库
+    ''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
 parser.add_argument('--imei', type=str, help='微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空')
@@ -102,6 +105,11 @@ if args.mode == 0:
             dbPwdTool.mostone(uid)
         else:
             print_red('[错误]---->请给出uid！')
+    elif args.type == 16:
+        if check_arg(uid):
+            dbPwdTool.tiktok(uid)
+        else:
+            print_red('[错误]---->请给出uid！')
     else:
         print_red('[错误]---->不支持的type值！')
         sys.exit(-1)
@@ -138,6 +146,11 @@ elif args.mode == 1:
     elif args.type == 7:
         if check_arg(key):
             dbTool.decrypt_SQLCipher3_default(key,file)
+        else:
+            print_red('[错误]---->请给出解密密码！')
+    elif args.type == 15:
+        if check_arg(key):
+            dbTool.decrypt_wcdb_default(key,file)
         else:
             print_red('[错误]---->请给出解密密码！')
     else:

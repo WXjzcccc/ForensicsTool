@@ -146,6 +146,42 @@ class DbTool:
                 print_red(f'[失败]---->原因[{err.strip()}]')
         return 0
     
+    def decrypt_wcdb_default(self,key :str,path :str) -> int:
+        """
+        @key:       数据库密钥
+        @path:      需要解密的数据库路径
+        """
+        sqlite3 = './lib/sqlite3.exe'
+        if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
+            sqlite3 = os.path.abspath(sqlite3)
+        else:
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
+            return -1
+        bname = os.path.basename(path)
+        name = bname.split('.')[0]
+        work_dir = os.getcwd()
+        floder = os.path.realpath(path)
+        floder = '\\'.join(floder.split('\\')[:-1])
+        os.chdir(floder)
+        print_yellow(f'<wcdb数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密数据库{bname}，解密密钥为',key)
+        result = subprocess.run([sqlite3,path,f"PRAGMA key = '{key}';PRAGMA cipher_page_size = 4096;PRAGMA kdf_iter = 64000;PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1;PRAGMA cipher_hmac_algorithm = HMAC_SHA1;ATTACH DATABASE '{name}_dec.db' AS {name}_dec KEY '';SELECT sqlcipher_export('{name}_dec');DETACH DATABASE {name}_dec;"],capture_output=True, text=True)
+        out = result.stdout
+        err = result.stderr
+        os.chdir(work_dir)
+        if out.strip() == 'ok' and err == '':
+            print_green(f'[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db')
+            return 1
+        else:
+            print_red(f'[失败]---->{bname}解密失败')
+            if err.strip().__contains__('already exists'):
+                print_red(f'[失败]---->原因[数据库已解密过，解密后的文件已存在！]')
+            elif err.strip().__contains__('file is not a database'):
+                print_red(f'[失败]---->原因[解密密钥或解密参数不正确！]')
+            else:
+                print_red(f'[失败]---->原因[{err.strip()}]')
+        return 0
+
     def decrypt_SQLCipher3_default(self,key :str,path :str) -> int:
         """
         @key:       数据库密钥
