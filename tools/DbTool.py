@@ -9,12 +9,17 @@ class DbTool:
     def __init__(self) -> None:
         pass
 
+    def get_relative_path(self,relative_path):
+        """获取配置文件的绝对路径"""
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_path, relative_path)
+
     def decrypt_EnMicroMsg(self,key :str,path: str) -> int:
         """
         @key:       数据库密钥
         @path:      需要解密的数据库路径
         """
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
@@ -56,7 +61,7 @@ class DbTool:
         @key:       数据库密钥
         @path:      需要解密的数据库路径
         """
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
@@ -115,7 +120,7 @@ class DbTool:
         @key:       数据库密钥
         @path:      需要解密的数据库路径
         """
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
@@ -151,7 +156,7 @@ class DbTool:
         @key:       数据库密钥
         @path:      需要解密的数据库路径
         """
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
@@ -187,7 +192,7 @@ class DbTool:
         @key:       数据库密钥
         @path:      需要解密的数据库路径
         """
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
@@ -235,11 +240,11 @@ class DbTool:
         head = '53514C69746520666F726D6174203300'
         print_yellow_key(f'[提示]---->正在解密高德数据库girf_sync.db，解密密钥为',key)
         path = os.path.abspath(file).replace('girf_sync.db','girf_sync_dec.db')
-        sqlite3 = './lib/sqlite3.exe'
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
         if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
             sqlite3 = os.path.abspath(sqlite3)
         else:
-            print_red('缺少依赖<sqlite3.exe>！')
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
             return -1
         with open(file,'rb') as fr:
             data = fr.read()

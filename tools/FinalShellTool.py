@@ -4,9 +4,14 @@ import os
 import json
 from .PrintTool import print_red,print_dict,print_yellow
 
+def get_relative_path(relative_path):
+    """获取配置文件的绝对路径"""
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
 def decrypt(dics):
     # 修改、编译自https://github.com/jas502n/FinalShellDecodePass
-    clazz = './lib/FinalShellDecodePass.class'
+    clazz = get_relative_path('../lib/FinalShellDecodePass.class')
     print('[提示]---->正在解密连接密码')
     if os.path.exists(clazz) and os.path.isfile(clazz):
         pass
