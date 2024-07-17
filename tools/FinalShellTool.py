@@ -18,8 +18,8 @@ def decrypt(dics):
     else:
         print_red('[失败]---->原因[缺少依赖<FinalShellDecodePass.class>！]')
         return -1
-    jpype.startJVM()
-    jpype.addClassPath('../lib')
+    jpype.startJVM(jpype.getDefaultJVMPath())
+    jpype.addClassPath(os.path.abspath(get_relative_path('../lib')))
     FinalShellDecodePass = jpype.JClass('FinalShellDecodePass')
     finalShellDecodePass = FinalShellDecodePass()
     for dic in dics:
