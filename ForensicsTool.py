@@ -9,6 +9,7 @@ from tools.FinalShellTool import analyzeFinalShell
 from tools.XshellTool import analyzeXshell
 from tools.WinTool import analyzeWin
 from tools.UTools import analyzeUTools
+from tools.HawkTool import analyzeHawk2
 import sys
 import rich
 import os
@@ -52,6 +53,7 @@ parser.add_argument('-t', '--type', type=int,help='''
     [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥，解密超级剪贴板的数据请指定-p参数值为super
     [15]wcdb加密的数据库
     [16]抖音的聊天数据库，计算密钥时提供--uid参数
+    [17]Hawk2.xml数据解密，指定-f参数为文件路径，-p参数为同目录下的crypto.KEY_256.xml或crypto.KEY_128.xml中的base64值
     ''')
 parser.add_argument('-p', '--password', type=str, help='解密的密码，处理钉钉和高德时不适用')
 parser.add_argument('--uin', type=str, help='微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值')
@@ -217,6 +219,14 @@ elif args.mode == 2:
                 print_red('[错误]---->请指定密码')
         else:
             print_red('[错误]---->请指定目录，而不是文件')
+    elif args.type == 17:
+        if os.path.isfile(file):
+            if check_arg(password):
+                analyzeHawk2(file,password)
+            else:
+                print_red('[错误]---->请指定密码')
+        else:
+            print_red('[错误]---->请给出正确的文件路径')
     else:
         print_red('[错误]---->不支持的type值！')
 elif args.mode == 3:
