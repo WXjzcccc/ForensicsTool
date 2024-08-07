@@ -181,7 +181,7 @@ class CommandLineApp:
         file_var = self.file_var.get()
         if file_var != '拖入文件或文件夹':
             command.append('-f')
-            command.append(file_var)
+            command.append(file_var.replace('{','').replace('}',''))
         for entry in self.entrys:
             param = self.get_param(entry)
             if param != '':
