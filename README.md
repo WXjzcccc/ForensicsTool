@@ -37,6 +37,7 @@ optional arguments:
                             [14]提取uTools的剪贴板数据，指定-f参数为剪贴板数据目录，-p为解密密钥，解密超级剪贴板的数据请指定-p参数值为super
                             [15]wcdb加密的数据库
                             [16]抖音的聊天数据库，计算密钥时提供--uid参数
+                            [17]Hawk2.xml数据解密，指定-f参数为文件路径，-p参数为同目录下的crypto.KEY_256.xml或crypto.KEY_128.xml中的base64值
 
   -p PASSWORD, --password PASSWORD
                         解密的密码，处理钉钉和高德时不适用

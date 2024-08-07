@@ -3,3 +3,4 @@ rich
 python-registry
 jpype1
 construct
+tkinterdnd2
