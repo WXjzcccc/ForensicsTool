@@ -15,8 +15,8 @@ optional arguments:
   -m MODE, --mode MODE
                         指定需要运行的模式:
                             [0]表示计算密钥，支持的type值为1-3、13、16
-                            [1]表示解密数据库，支持的type值为1、2、4-7、15
-                            [2]表示数据提取，支持的type值为8-12、14
+                            [1]表示解密数据库，支持的type值为1、2、4-7、15、18
+                            [2]表示数据提取，支持的type值为8-12、14、17
                             [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件
   -f FILE, --file FILE  指定需要处理的文件
   -t TYPE, --type TYPE
@@ -38,6 +38,7 @@ optional arguments:
                             [15]wcdb加密的数据库
                             [16]抖音的聊天数据库，计算密钥时提供--uid参数
                             [17]Hawk2.xml数据解密，指定-f参数为文件路径，-p参数为同目录下的crypto.KEY_256.xml或crypto.KEY_128.xml中的base64值
+                            [18]ntqq数据库解密，指定-f参数位文件路径，--uid参数为对应qq号的uid
 
   -p PASSWORD, --password PASSWORD
                         解密的密码，处理钉钉和高德时不适用
@@ -46,7 +47,7 @@ optional arguments:
   --wxid WXID           数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值
   --token TOKEN         野火IM系应用的用户token，shared_prefs/config.xml的token的值
   --device DEVICE       钉钉解密需要的内容，通常在shared_prefs/com.alibaba.android.rimet_preferences.xml中带有数据库名的字段的值中出现，如HUAWEI P40/armeabi-v7a/P40/qcom/HUAWEIP40
-  --uid UID             默往（通常在shared_prefs/im.xml中的userId的值）、抖音（数据库文件名中的id）计算密钥需要的内容
+  --uid UID             默往（通常在shared_prefs/im.xml中的userId的值）、抖音（数据库文件名中的id）计算密钥需要的内容、QQ（msf_mmkv_file中QQ号对应的uid）
 ```
 
 # 样例

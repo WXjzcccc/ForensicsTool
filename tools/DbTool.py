@@ -1,6 +1,7 @@
 import subprocess
 import os
 from Crypto.Cipher import AES
+from hashlib import md5
 import sqlite3
 import hashlib
 from .PrintTool import *
@@ -306,3 +307,59 @@ class DbTool:
                 else:
                     print_red(f'[失败]---->{bname}解密失败，解密密钥不正确！')
         print_red(f'[失败]---->{bname}解密失败，未能找到密钥，请确认输入的内容！')
+
+
+    def decrypt_ntqq(self,uid :str,path :str) -> int:
+        """
+        @uid:       用户的UID
+        @path:      需要解密的数据库路径
+        """
+        def _md5(s:str) -> str:
+            hash = md5()
+            hash.update(s.encode())
+            return hash.hexdigest()
+
+        sqlite3 = self.get_relative_path('../lib/sqlite3.exe')
+        if os.path.exists(sqlite3) and os.path.isfile(sqlite3):
+            sqlite3 = os.path.abspath(sqlite3)
+        else:
+            print_red('[失败]---->原因[缺少依赖<sqlite3.exe>！]')
+            return -1
+        with open(path+'.bak','wb') as fw:
+            with open(path,'rb+') as fr:
+                data = fr.read()
+                fw.write(data)
+                head = data[:1024]
+                salt_start = head.find(b'\x12\x08')+2
+                salt_end = head.find(b'\x1a\x07')
+                salt = head[salt_start:salt_end].decode()
+                encrypted_content = data[1024:]
+                fr.seek(0)
+                fr.write(encrypted_content)
+        key = _md5(_md5(uid)+salt)
+        bname = os.path.basename(path)
+        name = bname.split('.')[0]
+        work_dir = os.getcwd()
+        floder = os.path.realpath(path)
+        floder = '\\'.join(floder.split('\\')[:-1])
+        os.chdir(floder)
+        print_yellow(f'<ntqq数据库解密>')
+        print_yellow_key(f'[提示]---->正在解密数据库{bname}，解密密钥为',key)
+        hmac_lst = ['HMAC_SHA1','HMAC_SHA256','HMAC_SHA512']
+        err = ''
+        for hmac in hmac_lst:
+            result = subprocess.run([sqlite3,path,f"PRAGMA key = '{key}';PRAGMA cipher_page_size = 4096;PRAGMA kdf_iter = 4000;PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;PRAGMA cipher_hmac_algorithm = {hmac};ATTACH DATABASE '{name}_dec.db' AS {name}_dec KEY '';SELECT sqlcipher_export('{name}_dec');DETACH DATABASE {name}_dec;"],capture_output=True, text=True)
+            out = result.stdout
+            err = result.stderr
+            if out.strip() == 'ok' and err == '':
+                print_green(f'[成功]---->{bname}解密成功，解密后数据库在源文件同目录下{name}_dec.db')
+                os.chdir(work_dir)
+                return 1
+        print_red(f'[失败]---->{bname}解密失败')
+        if err.strip().__contains__('already exists'):
+            print_red(f'[失败]---->原因[数据库已解密过或解密密钥或解密参数不正确！]')
+        elif err.strip().__contains__('file is not a database'):
+            print_red(f'[失败]---->原因[数据库已解密过或解密密钥或解密参数不正确！]')
+        else:
+            print_red(f'[失败]---->原因[{err.strip()}]')
+        return 0
