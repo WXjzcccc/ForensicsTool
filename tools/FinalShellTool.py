@@ -25,6 +25,9 @@ def decrypt(dics):
     for dic in dics:
         encPwd = dic['密码']
         b64c = b64decode(encPwd)
+        if b64c == b'':
+            dic.update({'密码':''})
+            continue
         randomKey = finalShellDecodePass.ranDomKey(b64c[:8])
         m = finalShellDecodePass.desDecode(b64c[8:], randomKey)
         dic.update({'密码':m})
@@ -39,7 +42,7 @@ def analyzeFinalShell(folder :str):
                 path = os.path.join(root,file)
                 conn = {}
                 try:
-                    with open(path,'r') as fr:
+                    with open(path,'r',encoding='utf8') as fr:
                         con_json = json.loads(fr.read())
                         conn.update({'连接名':con_json['name']})
                         conn.update({'地址':con_json['host']})
@@ -47,7 +50,7 @@ def analyzeFinalShell(folder :str):
                         conn.update({'用户名':con_json['user_name']})
                         conn.update({'密码':con_json['password']})
                 except:
-                    with open(path,'r',encoding='utf8') as fr:
+                    with open(path,'r',encoding='gbk') as fr:
                         con_json = json.loads(fr.read())
                         conn.update({'连接名':con_json['name']})
                         conn.update({'地址':con_json['host']})
