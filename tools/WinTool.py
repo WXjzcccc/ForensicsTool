@@ -3,6 +3,9 @@ from .PrintTool import *
 import sys
 import datetime
 from construct import Struct, Bytes, CString
+import struct
+import pytz
+
 
 class WinTool:
     _system = ''
@@ -47,6 +50,56 @@ class WinTool:
         shutdown_time = root_key.value('ShutdownTime').value()
         return self.timestamp_hex(shutdown_time)
 
+    def timestamp_to_datetime(self, converted_time, origin_timezone='UTC', target_timezone='Asia/Shanghai'):
+        _timezone = pytz.timezone(origin_timezone)
+        converted_time = _timezone.localize(converted_time)
+        converted_time = converted_time.astimezone(pytz.timezone(target_timezone))
+        date_str = converted_time.strftime('%Y-%m-%d %H:%M:%S')
+        return date_str
+
+    def windows_file_time_to_datetime(self, timestamp, origin_timezone='UTC', target_timezone='Asia/Shanghai'):
+        try:
+            base_time = datetime.datetime(1601, 1, 1)
+            delta = datetime.timedelta(microseconds=timestamp / 10)
+            converted_time = base_time + delta
+            return self.timestamp_to_datetime(converted_time, origin_timezone, target_timezone)
+        except Exception as e:
+            print(e)
+            return '解析失败'
+
+    def parse_f_key(self, binary_data):
+        # 从二进制数据中提取特定信息
+
+        # User ID (偏移48-52字节，hex)
+        user_id = struct.unpack('<I', binary_data[48:52])[0]
+
+        # Last log-in Time (偏移16-24字节，8字节FILETIME格式)
+        last_login_time_raw = struct.unpack('<Q', binary_data[8:16])[0]
+        last_login_time = self.windows_file_time_to_datetime(last_login_time_raw)
+
+        # Last PW change (偏移40-48字节，8字节FILETIME格式)
+        last_pw_change_raw = struct.unpack('<Q', binary_data[24:32])[0]
+        last_pw_change = self.windows_file_time_to_datetime(last_pw_change_raw)
+
+        # Last failed log-in (偏移56-64字节，8字节FILETIME格式)
+        last_failed_login_raw = struct.unpack('<Q', binary_data[40:48])[0]
+        last_failed_login = self.windows_file_time_to_datetime(last_failed_login_raw)
+
+        # Log-on Count (偏移64-66字节，2字节整数)
+        invalid_pw_count = struct.unpack('<H', binary_data[64:66])[0]
+
+        # Invalid PW Count (偏移66-68字节，2字节整数)
+        logon_count = struct.unpack('<H', binary_data[66:68])[0]
+
+        return {
+            '用户ID': user_id,
+            '上次登录时间': last_login_time,
+            '登录次数': logon_count,
+            '登录失败次数': invalid_pw_count,
+            '上次密码修改时间': last_pw_change,
+            '上次登录失败时间': last_failed_login
+        }
+
     # TODO 获取用户信息，待添加更多细节
     def get_users(self) -> dict:
         def hex_key(key):
@@ -70,6 +123,8 @@ class WinTool:
             force_password = user_key.value('ForcePasswordReset').value() if self.check_key('ForcePasswordReset', user_key) else ''
             hint = user_key.value('UserPasswordHint').value() if self.check_key('UserPasswordHint', user_key) else b'/'
             expires = user_key.value('AccountExpires').value() if self.check_key('AccountExpires', user_key) else '/'
+            f_data = user_key.value('F').value() if self.check_key('F', user_key) else b''
+            f_info = self.parse_f_key(f_data)
             software_key = Registry.Registry(self._software).open('Microsoft\Windows NT\CurrentVersion\ProfileList')
             sid = '/'
             for v in software_key.subkeys():
@@ -89,6 +144,7 @@ class WinTool:
                 '密码提示':hint.decode('utf8'),
                 '过期时间':expires,
                 })
+            dic.update(f_info)
             users.append(dic)
         return users
 
