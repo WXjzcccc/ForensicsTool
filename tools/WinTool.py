@@ -1,3 +1,4 @@
+import os
 from Registry import Registry
 from .PrintTool import *
 import sys
@@ -13,23 +14,23 @@ class WinTool:
     _sam = ''
     _software = ''
 
-    def __init__(self, hives :dict):
+    def __init__(self, hives: dict):
         self._system = hives['SYSTEM'] if 'SYSTEM' in hives.keys() else ''
         self._ntuser = hives['NTUSER'] if 'NTUSER' in hives.keys() else []
         self._sam = hives['SAM'] if 'SAM' in hives.keys() else ''
         self._software = hives['SOFTWARE'] if 'SOFTWARE' in hives.keys() else ''
 
-    def timestamp(self, time_str :str) -> str:
+    def timestamp(self, time_str: str) -> str:
         dt = datetime.datetime.fromtimestamp(time_str)
         formatted_date = dt.strftime('%Y-%m-%d %H:%M:%S')
         return formatted_date
 
-    def timestamp_hex(self, time_str :str) -> str:
-        dt = datetime.datetime.fromtimestamp(int.from_bytes(time_str, byteorder='little') / 10**7 - 11644473600)
+    def timestamp_hex(self, time_str: str) -> str:
+        dt = datetime.datetime.fromtimestamp(int.from_bytes(time_str, byteorder='little') / 10 ** 7 - 11644473600)
         formatted_date = dt.strftime('%Y-%m-%d %H:%M:%S')
         return formatted_date
 
-    def get_timezone(self,) -> str:
+    def get_timezone(self, ) -> str:
         if self._system == '':
             return '没有给出SYSTEM注册表文件!'
         reg = Registry.Registry(self._system)
@@ -57,6 +58,11 @@ class WinTool:
         date_str = converted_time.strftime('%Y-%m-%d %H:%M:%S')
         return date_str
 
+    def get_relative_path(self,relative_path):
+        """获取配置文件的绝对路径"""
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_path, relative_path)
+
     def windows_file_time_to_datetime(self, timestamp, origin_timezone='UTC', target_timezone='Asia/Shanghai'):
         try:
             base_time = datetime.datetime(1601, 1, 1)
@@ -64,8 +70,40 @@ class WinTool:
             converted_time = base_time + delta
             return self.timestamp_to_datetime(converted_time, origin_timezone, target_timezone)
         except Exception as e:
-            print(e)
+            print_red(str(e))
             return '解析失败'
+
+    def get_nt_hash(self) -> dict:
+        if self._sam == '':
+            return '没有给出SAM注册表文件!'
+        if self._system == '':
+            return '没有给出SYSTEM注册表文件!'
+        import subprocess
+        nthash = self.get_relative_path('../lib/ntHashFromRegFile.exe')
+        if os.path.exists(nthash) and os.path.isfile(nthash):
+            nthash = os.path.abspath(nthash)
+        else:
+            print_red('[失败]---->原因[缺少依赖<ntHashFromRegFile.exe>！]')
+            return {}
+        command = [nthash, '--sam', self._sam, '--system', self._system]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout = result.stdout.decode('utf-8')
+        lines = stdout.splitlines()
+        ret = []
+        for line in lines:
+            tmp = line.split(':')
+            username = tmp[0]
+            uid = tmp[1]
+            lm_hash = tmp[2]
+            nt_hash = tmp[3]
+            ret.append({
+                "username":username,
+                    "uid":uid,
+                    "lm_hash":lm_hash,
+                    "nt_hash":nt_hash
+            })
+        return ret
+
 
     def parse_f_key(self, binary_data):
         # 从二进制数据中提取特定信息
@@ -92,7 +130,6 @@ class WinTool:
         logon_count = struct.unpack('<H', binary_data[66:68])[0]
 
         return {
-            '用户ID': user_id,
             '上次登录时间': last_login_time,
             '登录次数': logon_count,
             '登录失败次数': invalid_pw_count,
@@ -119,8 +156,6 @@ class WinTool:
             vtype = sub_key.value('').value_type()
             key = hex_key(vtype)
             user_key = root_key.subkey(key)
-            logon_show = user_key.value('UserDontShowInLogonUI').value() if self.check_key('UserDontShowInLogonUI', user_key) else '是'
-            force_password = user_key.value('ForcePasswordReset').value() if self.check_key('ForcePasswordReset', user_key) else ''
             hint = user_key.value('UserPasswordHint').value() if self.check_key('UserPasswordHint', user_key) else b'/'
             expires = user_key.value('AccountExpires').value() if self.check_key('AccountExpires', user_key) else '/'
             f_data = user_key.value('F').value() if self.check_key('F', user_key) else b''
@@ -130,49 +165,42 @@ class WinTool:
             for v in software_key.subkeys():
                 if v.name().endswith(str(vtype)):
                     sid = v.name()
-            if logon_show == b'\x01\x00\x00\x00':
-                logon_show = '否'
-            if force_password == b'\x01\x00\x00\x00':
-                force_password = '是'
-            else:
-                force_password = '否'
             dic.update({
-                '用户名':username,
-                'SID':sid,
-                '是否显示在登录界面':logon_show,
-                '下次登录是否强制修改密码':force_password,
-                '密码提示':hint.decode('utf8'),
-                '过期时间':expires,
-                })
+                '用户名': username,
+                'SID': sid,
+                '密码提示': hint.decode('utf8'),
+                '过期时间': expires
+            })
             dic.update(f_info)
             users.append(dic)
         return users
 
-    def get_recent_name(self,data :bytes) -> bytes:
+    def get_recent_name(self, data: bytes) -> bytes:
         _ = b''
-        for i in range(0,len(data),2):
-            if data[i:i+2] == b'\x00\x00':
+        for i in range(0, len(data), 2):
+            if data[i:i + 2] == b'\x00\x00':
                 break
-            _ += data[i:i+2]
+            _ += data[i:i + 2]
         return _
 
-    def parsePIDL(self,data):
+    def parsePIDL(self, data):
         data = data.split(b"\x04\x00\xef\xbe")
         counter = 0
         path = ''
         for d in data:
-            if counter == 0 :
+            if counter == 0:
                 letter = ''
-                if d.startswith(b'\x14\x00\x1F\x50\xE0\x4F\xD0\x20\xEA\x3A\x69\x10\xA2\xD8\x08\x00\x2B\x30\x30\x9D\x19\x00\x2F'):
+                if d.startswith(
+                        b'\x14\x00\x1F\x50\xE0\x4F\xD0\x20\xEA\x3A\x69\x10\xA2\xD8\x08\x00\x2B\x30\x30\x9D\x19\x00\x2F'):
                     letter = d[23:25].decode()
                 path += letter
             else:
                 format = Struct(
-                        'unkuwn'/Bytes(38),
-                        'Path' /CString("utf16")
-                    )
+                    'unkuwn' / Bytes(38),
+                    'Path' / CString("utf16")
+                )
                 dd = format.parse(d)
-                path += "\\"+str(dd.Path)
+                path += "\\" + str(dd.Path)
             counter = counter + 1
         return path
 
@@ -192,10 +220,10 @@ class WinTool:
                     _ = self.get_recent_name(v.value())
                     filename = _.decode('utf-16le')
                     recent_docs.append({
-                        '类型':_type,
-                        '文件名':filename,
+                        '类型': _type,
+                        '文件名': filename,
                     })
-            lst.append([recent_docs,'最近访问的文档',ntuser])
+            lst.append([recent_docs, '最近访问的文档', ntuser])
             root_key = reg.open(r'Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32')
             recent_pro = []
             program_key = root_key.subkey('CIDSizeMRU')
@@ -205,7 +233,7 @@ class WinTool:
                 _ = self.get_recent_name(v.value())
                 filename = _.decode('utf-16le')
                 recent_pro.append({
-                    '程序':filename
+                    '程序': filename
                 })
             program_key = root_key.subkey('LastVisitedPidlMRU')
             for v in program_key.values():
@@ -215,9 +243,9 @@ class WinTool:
                 filename = _.decode('utf-16le')
                 if filename not in [x['程序'] for x in recent_pro]:
                     recent_pro.append({
-                        '程序':filename
+                        '程序': filename
                     })
-            lst.append([recent_pro,'最近打开的程序',ntuser])
+            lst.append([recent_pro, '最近打开的程序', ntuser])
             recent_files = []
             file_key = root_key.subkey('OpenSavePidlMRU')
             for sub_key in file_key.subkeys():
@@ -227,11 +255,11 @@ class WinTool:
                     _ = self.parsePIDL(v.value())
                     filename = _
                     recent_files.append({
-                        '类型':sub_key.name(),
-                        '文件路径':filename
+                        '类型': sub_key.name(),
+                        '文件路径': filename
                     })
             # TODO 解决编码问题
-            lst.append([recent_files,'最近保存的文件',ntuser])
+            lst.append([recent_files, '最近保存的文件', ntuser])
         return lst
 
     # TODO 解析最近使用的运行命令，解析开机自启动应用。。。
@@ -256,12 +284,12 @@ class WinTool:
             for ntuser in self._ntuser:
                 reg = Registry.Registry(ntuser)
                 root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
-                lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/',ntuser])
+                lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/', ntuser])
         except:
-            lst = ['/',ntuser]
+            lst = ['/', ntuser]
         return lst
 
-    def check_key(self, name :str, key :Registry.RegistryKey) -> bool:
+    def check_key(self, name: str, key: Registry.RegistryKey) -> bool:
         for v in key.values():
             if v.name() == name:
                 return True
@@ -282,20 +310,25 @@ class WinTool:
             for _ in _keys:
                 if v.name().upper() == _.name():
                     connection = _.subkey('connection')
-                    dic.update({'名称':connection.value('Name').value() if self.check_key('Name', connection) else '/'})
-            dic.update({'IP地址':v.value('IPAddress').value()[0] if self.check_key('IPAddress', v) else '/'})
-            dic.update({'子网掩码':v.value('SubnetMask').value()[0] if self.check_key('SubnetMask', v) else '/'})
-            dic.update({'网关':v.value('DefaultGateway').value()[0] if self.check_key('DefaultGateway', v) else '/'})
-            dic.update({'DHCP网络地址':v.value('DhcpIPAddress').value() if self.check_key('DhcpIPAddress', v) else '/'})
-            dic.update({'DHCP网关':v.value('DhcpDefaultGateway').value()[0] if self.check_key('DhcpDefaultGateway', v) else '/'})
-            dic.update({'DHCP子网掩码':v.value('DhcpSubnetMask').value() if self.check_key('DhcpSubnetMask', v) else '/'})
-            dic.update({'DHCP服务地址':v.value('DhcpServer').value() if self.check_key('DhcpServer', v) else '/'})
-            dic.update({'租赁时间':self.timestamp(v.value('LeaseObtainedTime').value()) if self.check_key('LeaseObtainedTime', v) else '/'})
-            dic.update({'过期时间':self.timestamp(v.value('LeaseTerminatesTime').value()) if self.check_key('LeaseTerminatesTime', v) else '/'})
-            dic.update({'DHCP服务地址':v.value('DhcpServer').value() if self.check_key('DhcpServer', v) else '/'})
+                    dic.update(
+                        {'名称': connection.value('Name').value() if self.check_key('Name', connection) else '/'})
+            dic.update({'IP地址': v.value('IPAddress').value()[0] if self.check_key('IPAddress', v) else '/'})
+            dic.update({'子网掩码': v.value('SubnetMask').value()[0] if self.check_key('SubnetMask', v) else '/'})
+            dic.update({'网关': v.value('DefaultGateway').value()[0] if self.check_key('DefaultGateway', v) else '/'})
+            dic.update(
+                {'DHCP网络地址': v.value('DhcpIPAddress').value() if self.check_key('DhcpIPAddress', v) else '/'})
+            dic.update({'DHCP网关': v.value('DhcpDefaultGateway').value()[0] if self.check_key('DhcpDefaultGateway',
+                                                                                               v) else '/'})
+            dic.update(
+                {'DHCP子网掩码': v.value('DhcpSubnetMask').value() if self.check_key('DhcpSubnetMask', v) else '/'})
+            dic.update({'DHCP服务地址': v.value('DhcpServer').value() if self.check_key('DhcpServer', v) else '/'})
+            dic.update({'租赁时间': self.timestamp(v.value('LeaseObtainedTime').value()) if self.check_key(
+                'LeaseObtainedTime', v) else '/'})
+            dic.update({'过期时间': self.timestamp(v.value('LeaseTerminatesTime').value()) if self.check_key(
+                'LeaseTerminatesTime', v) else '/'})
+            dic.update({'DHCP服务地址': v.value('DhcpServer').value() if self.check_key('DhcpServer', v) else '/'})
             lst.append(dic)
         return lst
-
 
     def get_system_info(self) -> dict:
         system_info = {}
@@ -304,22 +337,30 @@ class WinTool:
             sys.exit(-1)
         reg = Registry.Registry(self._software)
         root_key = reg.open(r'Microsoft\Windows NT\CurrentVersion')
-        system_info.update({'Build信息':root_key.value('BuildLabEx').value() if self.check_key('BuildLabEx', root_key) else '/'})
-        system_info.update({'Build版本':root_key.value('CurrentBuildNumber').value() if self.check_key('CurrentBuildNumber', root_key) else '/'})
-        system_info.update({'计算机名称':self.get_system_name()})
-        system_info.update({'版本信息':root_key.value('EditionID').value() if self.check_key('EditionID', root_key) else '/'})
-        system_info.update({'安装时间(本地时区)':self.timestamp(root_key.value('InstallDate').value()) if self.check_key('InstallDate', root_key) else '/'})
-        system_info.update({'系统名称':root_key.value('ProductName').value() if self.check_key('ProductName', root_key) else '/'})
-        system_info.update({'发行ID':root_key.value('ReleaseID').value() if self.check_key('ReleaseID', root_key) else '/'})
-        system_info.update({'产品ID':root_key.value('ProductID').value() if self.check_key('ProductID', root_key) else '/'})
+        system_info.update(
+            {'Build信息': root_key.value('BuildLabEx').value() if self.check_key('BuildLabEx', root_key) else '/'})
+        system_info.update({'Build版本': root_key.value('CurrentBuildNumber').value() if self.check_key(
+            'CurrentBuildNumber', root_key) else '/'})
+        system_info.update({'计算机名称': self.get_system_name()})
+        system_info.update(
+            {'版本信息': root_key.value('EditionID').value() if self.check_key('EditionID', root_key) else '/'})
+        system_info.update({'安装时间(本地时区)': self.timestamp(
+            root_key.value('InstallDate').value()) if self.check_key('InstallDate', root_key) else '/'})
+        system_info.update(
+            {'系统名称': root_key.value('ProductName').value() if self.check_key('ProductName', root_key) else '/'})
+        system_info.update(
+            {'发行ID': root_key.value('ReleaseID').value() if self.check_key('ReleaseID', root_key) else '/'})
+        system_info.update(
+            {'产品ID': root_key.value('ProductID').value() if self.check_key('ProductID', root_key) else '/'})
         product_key = reg.open(r'Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform')
-        system_info.update({'产品密钥备份(非当前密钥)':product_key.value('BackupProductKeyDefault').value() if self.check_key('BackupProductKeyDefault', product_key) else '/'})
-        system_info.update({'系统时区':self.get_timezone()})
-        system_info.update({'上次正常关机时间(本地时区)':self.get_last_shutdown_time()})
-        system_info.update({'上次登录的用户':self.get_login_user()})
-        system_info.update({'默认浏览器':self.get_default_browser()[0][0] if self.get_default_browser() != [] else '/'})
+        system_info.update({'产品密钥备份(非当前密钥)': product_key.value(
+            'BackupProductKeyDefault').value() if self.check_key('BackupProductKeyDefault', product_key) else '/'})
+        system_info.update({'系统时区': self.get_timezone()})
+        system_info.update({'上次正常关机时间(本地时区)': self.get_last_shutdown_time()})
+        system_info.update({'上次登录的用户': self.get_login_user()})
+        system_info.update(
+            {'默认浏览器': self.get_default_browser()[0][0] if self.get_default_browser() != [] else '/'})
         return system_info
-    
 
     # TODO USB信息
     def get_usb(self) -> list:
@@ -343,15 +384,17 @@ class WinTool:
                 print('===========')
         print(volumes)
 
-def analyzeWin(hives :dict):
+
+def analyzeWin(hives: dict):
     winTool = WinTool(hives)
-    print_table(winTool.get_system_info(),title='系统信息')
-    print_dict(winTool.get_net_info(),winTool.get_net_info()[0].keys(),title='网络信息')
-    print_dict(winTool.get_users(),winTool.get_users()[0].keys(),title='用户信息')
+    print_table(winTool.get_system_info(), title='系统信息')
+    print_dict(winTool.get_net_info(), winTool.get_net_info()[0].keys(), title='网络信息')
+    print_dict(winTool.get_users(), winTool.get_users()[0].keys(), title='用户信息')
+    print_dict(winTool.get_nt_hash(),winTool.get_nt_hash()[0].keys(), title='密码信息')
     recent_data = winTool.get_recent()
     for v in recent_data:
         if len(v[0]) > 0:
-            print_dict(v[0],v[0][0].keys(),title=v[1]+f'[{v[2]}]')
+            print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
     # winTool.get_usb()
     print_yellow('[提示]---->最近保存的文件中，如果没有父目录，请在用户的桌面、文档等地方查找文件')
     print_yellow('[提示]---->会努力优化的。。')
