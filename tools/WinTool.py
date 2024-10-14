@@ -284,7 +284,12 @@ class WinTool:
             for ntuser in self._ntuser:
                 reg = Registry.Registry(ntuser)
                 root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
-                lst.append([root_key.value('ProgId').value() if self.check_key('ProgId', root_key) else '/', ntuser])
+                if self.check_key('ProgId', root_key):
+                    lst.append([root_key.value('ProgId').value(),ntuser])
+                elif self.check_key('Progid', root_key):
+                    lst.append([root_key.value('Progid').value(),ntuser])
+                else:
+                    lst.append(['/',ntuser])
         except:
             lst = ['/', ntuser]
         return lst
