@@ -69,6 +69,7 @@ def analyzeXshell(foler :str,sid :str):
                 deal_file = preDeal(origin_file)
                 cf.read(deal_file,encoding='ansi')
                 conn.update({'连接名':os.path.basename(file).replace(r'.xfp','')})
+                version = cf.get('SessionInfo', 'Version')
                 conn.update({'地址':cf.get('Connection','Host')})
                 conn.update({'端口':cf.get('Connection','Port')})
                 if version != '7.0' and version.startswith('7.'):
