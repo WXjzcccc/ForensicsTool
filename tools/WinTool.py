@@ -1,4 +1,6 @@
 import os
+
+from Demos.RegCreateKeyTransacted import subkey
 from Registry import Registry
 from .PrintTool import *
 import sys
@@ -389,6 +391,22 @@ class WinTool:
                 print('===========')
         print(volumes)
 
+    def get_web_location(self) -> list:
+        if self._ntuser == []:
+            return '没有给出NTUSER注册表文件!'
+        lst = []
+        for ntuser in self._ntuser:
+            locations = []
+            reg = Registry.Registry(ntuser)
+            root_key = reg.open(r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2')
+            subkeys = root_key.subkeys()
+            for subkey in subkeys:
+                location = subkey.name()
+                if location.startswith('##'):
+                    location = location.replace('#', '\\')
+                    locations.append({"地址":location})
+            lst.append([locations,'网路位置',ntuser])
+        return lst
 
 def analyzeWin(hives: dict):
     winTool = WinTool(hives)
@@ -396,6 +414,10 @@ def analyzeWin(hives: dict):
     print_dict(winTool.get_net_info(), winTool.get_net_info()[0].keys(), title='网络信息')
     print_dict(winTool.get_users(), winTool.get_users()[0].keys(), title='用户信息')
     print_dict(winTool.get_nt_hash(),winTool.get_nt_hash()[0].keys(), title='密码信息')
+    location_data = winTool.get_web_location()
+    for v in location_data:
+        if len(v[0]) > 0:
+            print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
     recent_data = winTool.get_recent()
     for v in recent_data:
         if len(v[0]) > 0:
