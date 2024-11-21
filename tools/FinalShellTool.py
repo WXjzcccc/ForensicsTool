@@ -58,6 +58,26 @@ def analyzeFinalShell(folder :str):
                         conn.update({'用户名':con_json['user_name']})
                         conn.update({'密码':con_json['password']})
                 conns.append(conn)
+            elif file.endswith('.json'):
+                path = os.path.join(root, file)
+                conn = {}
+                try:
+                    with open(path, 'r', encoding='utf8') as fr:
+                        con_json = json.loads(fr.read())
+                        conn.update({'连接名': file.replace('.json','')})
+                        conn.update({'地址': con_json['host']})
+                        conn.update({'端口': con_json['port']})
+                        conn.update({'用户名': con_json['user_name']})
+                        conn.update({'密码': con_json['password']})
+                except:
+                    with open(path, 'r', encoding='gbk') as fr:
+                        con_json = json.loads(fr.read())
+                        conn.update({'连接名': file.replace('.json','')})
+                        conn.update({'地址': con_json['host']})
+                        conn.update({'端口': con_json['port']})
+                        conn.update({'用户名': con_json['user_name']})
+                        conn.update({'密码': con_json['password']})
+                conns.append(conn)
     conns = decrypt(conns)
     print_dict(conns,conns[0].keys(),'FinalShell连接信息')
     print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')
