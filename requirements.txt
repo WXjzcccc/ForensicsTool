@@ -4,3 +4,4 @@ python-registry
 jpype1
 construct
 tkinterdnd2
+pytz

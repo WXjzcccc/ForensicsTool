@@ -1,6 +1,5 @@
 import os
 
-from Demos.RegCreateKeyTransacted import subkey
 from Registry import Registry
 from .PrintTool import *
 import sys
