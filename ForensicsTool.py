@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,d
   / __/__  _______ ___  ___ (_)______   /_  __/__  ___  / /
  / _// _ \/ __/ -_) _ \(_-</ / __(_-<    / / / _ \/ _ \/ / 
 /_/  \___/_/  \__/_//_/___/_/\__/___/   /_/  \___/\___/_/  
-                                                            Author: WXjzc''')
+                                                            Author: WXjzc,b3nguang''')
 
 # 添加命令行参数
 parser.add_argument('-m','--mode', type=int,help='''

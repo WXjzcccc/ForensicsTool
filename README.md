@@ -8,7 +8,7 @@ usage: ForensicsTool.py [-h] [-m MODE] [-f FILE] [-t TYPE] [-p PASSWORD] [--uin 
   / __/__  _______ ___  ___ (_)______   /_  __/__  ___  / /
  / _// _ \/ __/ -_) _ \(_-</ / __(_-<    / / / _ \/ _ \/ /
 /_/  \___/_/  \__/_//_/___/_/\__/___/   /_/  \___/\___/_/
-                                                            Author: WXjzc
+                                                            Author: WXjzc,b3nguang
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -18,6 +18,7 @@ optional arguments:
                             [1]表示解密数据库，支持的type值为1、2、4-7、15、18
                             [2]表示数据提取，支持的type值为8-12、14、17
                             [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件
+                            [4]MetaMask解析，需要指定-f参数为persist-root文件路径
   -f FILE, --file FILE  指定需要处理的文件
   -t TYPE, --type TYPE
                         指定需要处理的内容:
