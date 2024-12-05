@@ -10,6 +10,7 @@ from tools.XshellTool import analyzeXshell
 from tools.WinTool import analyzeWin
 from tools.UTools import analyzeUTools
 from tools.HawkTool import analyzeHawk2
+from tools.MetaMaskTool import analyzeMetaMask
 import sys
 import rich
 import os
@@ -33,7 +34,8 @@ parser.add_argument('-m','--mode', type=int,help='''
     [0]表示计算密钥，支持的type值为1-3、13、16
     [1]表示解密数据库，支持的type值为1、2、4-7、15、18
     [2]表示数据提取，支持的type值为8-12、14、17
-    [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件''')
+    [3]Windows注册表解析，需要指定-f参数为注册表文件所在目录，目前需要SAM、SOFTWARE、SYSTEM及用户的NTUSER.DAT文件
+    [4]MetaMask解析，需要指定-f参数为persist-root文件路径''')
 parser.add_argument('-f', '--file', type=str,help='指定需要处理的文件')
 parser.add_argument('-t', '--type', type=int,help='''
 指定需要处理的内容:
@@ -258,5 +260,12 @@ elif args.mode == 3:
         analyzeWin(dic)
     else:
         print_red('[错误]---->请指定目录，而不是文件')
+elif args.mode == 4:
+    file = args.file
+    dic = {}
+    if not check_arg(file):
+        print_red('[错误]---->请给出file参数！')
+        sys.exit(-1)
+    analyzeMetaMask(file)
 else:
     print_red('[错误]---->不支持的mode值！')
