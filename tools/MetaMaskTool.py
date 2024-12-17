@@ -1,13 +1,15 @@
+import datetime
+import json
+
 from rich.console import Console
 from rich.table import Table
-import json
-import datetime
+
 
 def print_metamask_table(dic_list: list, title: str = ''):
     console = Console()
     if dic_list:
         table = Table(show_header=True, header_style="bold green", title=f'<{title}>', title_style='yellow')
-        
+
         headers = dic_list[0].keys()
         for header in headers:
             table.add_column(header, style="cyan", justify="center")
@@ -19,6 +21,7 @@ def print_metamask_table(dic_list: list, title: str = ''):
 
         table.auto_width = True
         console.print(table)
+
 
 def analyzeMetaMask(file_path):
     wallets = []
@@ -85,7 +88,15 @@ def analyzeMetaMask(file_path):
                 browser_history.append(browser_history_info)
 
     # Print the extracted information using print_metamask_table
+    dic = {}
+    dic.update({
+        'Wallets': wallets,
+        'Contacts': contacts,
+        'Transactions': transactions,
+        'Browser History': browser_history
+    })
     print_metamask_table(wallets, title='Wallets')
     print_metamask_table(contacts, title='Contacts')
     print_metamask_table(transactions, title='Transactions')
     print_metamask_table(browser_history, title='Browser History')
+    return dic

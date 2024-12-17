@@ -1,12 +1,13 @@
-import os
-
-from Registry import Registry
-from .PrintTool import *
-import sys
 import datetime
-from construct import Struct, Bytes, CString
+import os
 import struct
+import sys
+
 import pytz
+from Registry import Registry
+from construct import Struct, Bytes, CString
+
+from .PrintTool import *
 
 
 class WinTool:
@@ -59,7 +60,7 @@ class WinTool:
         date_str = converted_time.strftime('%Y-%m-%d %H:%M:%S')
         return date_str
 
-    def get_relative_path(self,relative_path):
+    def get_relative_path(self, relative_path):
         """获取配置文件的绝对路径"""
         base_path = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(base_path, relative_path)
@@ -98,13 +99,12 @@ class WinTool:
             lm_hash = tmp[2]
             nt_hash = tmp[3]
             ret.append({
-                "username":username,
-                    "uid":uid,
-                    "lm_hash":lm_hash,
-                    "nt_hash":nt_hash
+                "username": username,
+                "uid": uid,
+                "lm_hash": lm_hash,
+                "nt_hash": nt_hash
             })
         return ret
-
 
     def parse_f_key(self, binary_data):
         # 从二进制数据中提取特定信息
@@ -143,6 +143,7 @@ class WinTool:
         def hex_key(key):
             _key = hex(key)[2:]
             return _key.upper().zfill(8)
+
         if self._sam == '':
             return '没有给出SAM注册表文件!'
         if self._software == '':
@@ -286,11 +287,11 @@ class WinTool:
                 reg = Registry.Registry(ntuser)
                 root_key = reg.open(r'SOFTWARE\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice')
                 if self.check_key('ProgId', root_key):
-                    lst.append([root_key.value('ProgId').value(),ntuser])
+                    lst.append([root_key.value('ProgId').value(), ntuser])
                 elif self.check_key('Progid', root_key):
-                    lst.append([root_key.value('Progid').value(),ntuser])
+                    lst.append([root_key.value('Progid').value(), ntuser])
                 else:
-                    lst.append(['/',ntuser])
+                    lst.append(['/', ntuser])
         except:
             lst = ['/', ntuser]
         return lst
@@ -313,6 +314,7 @@ class WinTool:
         _keys = device_key.subkeys()
         for v in keys:
             dic = {}
+            dic.update({'名称': '/'})
             for _ in _keys:
                 if v.name().upper() == _.name():
                     connection = _.subkey('connection')
@@ -403,24 +405,47 @@ class WinTool:
                 location = subkey.name()
                 if location.startswith('##'):
                     location = location.replace('#', '\\')
-                    locations.append({"地址":location})
-            lst.append([locations,'网路位置',ntuser])
+                    locations.append({"地址": location})
+            lst.append([locations, '网路位置', ntuser])
         return lst
+
 
 def analyzeWin(hives: dict):
     winTool = WinTool(hives)
-    print_table(winTool.get_system_info(), title='系统信息')
-    print_dict(winTool.get_net_info(), winTool.get_net_info()[0].keys(), title='网络信息')
-    print_dict(winTool.get_users(), winTool.get_users()[0].keys(), title='用户信息')
-    print_dict(winTool.get_nt_hash(),winTool.get_nt_hash()[0].keys(), title='密码信息')
-    location_data = winTool.get_web_location()
-    for v in location_data:
-        if len(v[0]) > 0:
-            print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
-    recent_data = winTool.get_recent()
-    for v in recent_data:
-        if len(v[0]) > 0:
-            print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
+    system_info = winTool.get_system_info()
+    print_table(system_info, title='系统信息')
+    dic2 = {
+        '系统信息': system_info
+    }
+    dic = {}
+    net_info = winTool.get_net_info()
+    users = winTool.get_users()
+    nt_hash = winTool.get_nt_hash()
+    print_dict(net_info, net_info[0].keys(), title='网络信息')
+    print_dict(users, users[0].keys(), title='用户信息')
+    print_dict(nt_hash, nt_hash[0].keys(), title='密码信息')
+    dic.update({
+        '网络信息': net_info,
+        '用户信息': users,
+        '密码信息': nt_hash
+    })
+    try:
+        location_data = winTool.get_web_location()
+        for v in location_data:
+            if len(v[0]) > 0:
+                print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
+                dic.update({f'[{v[2]}]': v[0]})
+    except Exception as e:
+        print(e)
+    try:
+        recent_data = winTool.get_recent()
+        for v in recent_data:
+            if len(v[0]) > 0:
+                print_dict(v[0], v[0][0].keys(), title=v[1] + f'[{v[2]}]')
+                dic.update({f'[{v[2]}]': v[0]})
+    except Exception as e:
+        print(e)
     # winTool.get_usb()
     print_yellow('[提示]---->最近保存的文件中，如果没有父目录，请在用户的桌面、文档等地方查找文件')
     print_yellow('[提示]---->会努力优化的。。')
+    return dic, dic2

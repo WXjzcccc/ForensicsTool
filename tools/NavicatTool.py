@@ -1,12 +1,17 @@
-import hashlib
-import codecs
 import binascii
-from Crypto.Cipher import Blowfish,AES
+import codecs
+import hashlib
+
+from Crypto.Cipher import Blowfish, AES
 from Registry import Registry
-from .PrintTool import print_yellow,print_dict
+
+from .PrintTool import print_yellow, print_dict
+
 '''
 用于11版本解密
 '''
+
+
 class Navicat11Cipher:
     DEFAULT_USER_KEY = "3DC5CA39"
 
@@ -32,49 +37,49 @@ class Navicat11Cipher:
 
     def _xor_bytes(self, a, b, l=None):
         if l != None:
-            return bytes([x ^ y for x, y in zip(a,b)][:l])
+            return bytes([x ^ y for x, y in zip(a, b)][:l])
         return bytes([x ^ y for x, y in zip(a, b)])
 
     def encrypt(self, in_data):
         out_data = bytearray(len(in_data))
         cv = bytearray(self._iv)
-        blocks_len = len(in_data)//8
+        blocks_len = len(in_data) // 8
         left_len = len(in_data) % 8
         for i in range(0, blocks_len):
-            temp = in_data[i*8:i*8 + Blowfish.block_size]
+            temp = in_data[i * 8:i * 8 + Blowfish.block_size]
             temp = self._xor_bytes(temp, cv)
             temp = self._encryptor.encrypt(temp)
-            cv = self._xor_bytes(cv,temp)
-            out_data[i*8:i*8 + Blowfish.block_size] = temp
+            cv = self._xor_bytes(cv, temp)
+            out_data[i * 8:i * 8 + Blowfish.block_size] = temp
         if left_len != 0:
             cv = self._encryptor.encrypt(cv)
-            temp = in_data[blocks_len*8:blocks_len*8+left_len]
-            temp = self._xor_bytes(temp,cv)
-            out_data[blocks_len*8:] = temp
+            temp = in_data[blocks_len * 8:blocks_len * 8 + left_len]
+            temp = self._xor_bytes(temp, cv)
+            out_data[blocks_len * 8:] = temp
 
         return bytes(out_data)
 
     def decrypt(self, in_data):
         out_data = bytearray(len(in_data))
         cv = bytearray(self._iv)
-        
-        blocks_len = len(in_data)//8
+
+        blocks_len = len(in_data) // 8
         left_len = len(in_data) % 8
 
         for i in range(0, blocks_len):
-            temp = in_data[i*8:i*8 + Blowfish.block_size]
+            temp = in_data[i * 8:i * 8 + Blowfish.block_size]
             temp = self._decryptor.decrypt(temp)
             temp = self._xor_bytes(temp, cv)
-            out_data[i*8:i*8 + Blowfish.block_size] = temp
+            out_data[i * 8:i * 8 + Blowfish.block_size] = temp
             cvb = bytearray(cv)
             for j in range(len(cv)):
-                cvb[j] = cv[j]^in_data[i*8+j]
+                cvb[j] = cv[j] ^ in_data[i * 8 + j]
             cv = bytes(cvb)
         if left_len != 0:
             cv = self._encryptor.encrypt(cv)
-            temp = in_data[blocks_len*8:blocks_len*8+left_len]
-            temp = self._xor_bytes(temp,cv)
-            out_data[blocks_len*8:] = temp
+            temp = in_data[blocks_len * 8:blocks_len * 8 + left_len]
+            temp = self._xor_bytes(temp, cv)
+            out_data[blocks_len * 8:] = temp
         return out_data
 
     def encrypt_string(self, input_string):
@@ -87,9 +92,12 @@ class Navicat11Cipher:
         out_data = self.decrypt(in_data)
         return out_data.decode("utf-8")
 
+
 '''
 用于12版本之后解密
 '''
+
+
 class Navicat12Cipher:
     _AesKey = b"libcckeylibcckey"
     _AesIV = b"libcciv libcciv "
@@ -118,10 +126,13 @@ class Navicat12Cipher:
     def _unpad(self, s):
         return s[:-s[-1]]
 
+
 '''
 解密函数封装
 '''
-def decryptPwd(pwd :str) -> str:
+
+
+def decryptPwd(pwd: str) -> str:
     password = ''
     try:
         dec12 = Navicat12Cipher()
@@ -137,173 +148,197 @@ def decryptPwd(pwd :str) -> str:
 '''
 读取mysql数据
 '''
-def get_mysql_info(server_keys :list) -> dict:
+
+
+def get_mysql_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取MySQL数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取mariadb数据
 '''
-def get_mariadb_info(server_keys :list) -> dict:
+
+
+def get_mariadb_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取MariaDB数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取mongodb数据
 '''
-def get_mongodb_info(server_keys :list) -> dict:
+
+
+def get_mongodb_info(server_keys: list) -> dict:
     info = {}
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取sqlserver数据
 '''
-def get_sqlserver_info(server_keys :list) -> dict:
+
+
+def get_sqlserver_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取SQLServer数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'默认数据库':v.value('InitialDatabase').value()})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
-            basic_info.update({'认证模式':v.value('MSSQLAuthenMode').value()[3:]})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'默认数据库': v.value('InitialDatabase').value()})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
+            basic_info.update({'认证模式': v.value('MSSQLAuthenMode').value()[3:]})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取oracle数据
 '''
-def get_oracle_info(server_keys :list) -> dict:
+
+
+def get_oracle_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取Oracle数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取pgsql数据
 '''
-def get_postgres_info(server_keys :list) -> dict:
+
+
+def get_postgres_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取PostgreSQL数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'地址':v.value('Host').value()})
-            basic_info.update({'端口':v.value('Port').value()})
-            basic_info.update({'用户名':v.value('UserName').value()})
-            basic_info.update({'密码':decryptPwd(v.value('Pwd').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'地址': v.value('Host').value()})
+            basic_info.update({'端口': v.value('Port').value()})
+            basic_info.update({'用户名': v.value('UserName').value()})
+            basic_info.update({'密码': decryptPwd(v.value('Pwd').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
+
 
 '''
 读取sqlite数据
 '''
-def get_sqlite_info(server_keys :list) -> dict:
+
+
+def get_sqlite_info(server_keys: list) -> dict:
     info = {}
     print('[提示]---->正在读取SQLite数据')
     for v in server_keys:
         basic_info = {}
         try:
-            basic_info.update({'连接名':v.name()})
-            basic_info.update({'文件名':v.value('DatabaseFileName').value()})
-            basic_info.update({'是否加密':'否' if v.value('SQLiteEncrypted').value()==0 else '是'})
-            basic_info.update({'是否保存密码':'否' if v.value('EncryptionSavePassword').value()=='false' else '是'})
-            basic_info.update({'密码':decryptPwd(v.value('EncryptionPassword').value())})
-            basic_info.update({'缓存路径':v.value('QuerySavePath').value()})
+            basic_info.update({'连接名': v.name()})
+            basic_info.update({'文件名': v.value('DatabaseFileName').value()})
+            basic_info.update({'是否加密': '否' if v.value('SQLiteEncrypted').value() == 0 else '是'})
+            basic_info.update({'是否保存密码': '否' if v.value('EncryptionSavePassword').value() == 'false' else '是'})
+            basic_info.update({'密码': decryptPwd(v.value('EncryptionPassword').value())})
+            basic_info.update({'缓存路径': v.value('QuerySavePath').value()})
         except:
             pass
         finally:
-            info.update({v.name():basic_info})
+            info.update({v.name(): basic_info})
     return info
 
 
-def get_navicat_connections(reg :str) -> dict:
+def get_navicat_connections(reg: str) -> dict:
     connections = {}
     database = []
     try:
         reg = Registry.Registry(reg)
         root_key = reg.open("Software\\PremiumSoft")
         for v in root_key.subkeys():
-            if v.name() not in ['Data','NavicatPremium']:
+            if v.name() not in ['Data', 'NavicatPremium']:
                 database.append(v.name())
         for db in database:
-            db_key = reg.open(f"Software\\PremiumSoft\\{db}\\Servers")
-            server_list = db_key.subkeys()
-            connections.update({db:server_list})
+            try:
+                db_key = reg.open(f"Software\\PremiumSoft\\{db}\\Servers")
+                server_list = db_key.subkeys()
+                connections.update({db: server_list})
+            except:
+                continue
     except:
         pass
     return connections
 
-def analyzeNavicat(reg :str):
+
+def analyzeNavicat(reg: str):
     print_yellow('<Navicat连接信息提取>')
     connections = get_navicat_connections(reg)
-    # print(connections)
+    dic = {}
     try:
         mysql = get_mysql_info(connections['Navicat'])
         count_mysql = 0
@@ -314,7 +349,8 @@ def analyzeNavicat(reg :str):
                 record[k] = str(mysql[v][k])
             count_mysql += 1
             records.append(record)
-        print_dict(records,records[0].keys(),title='MySQL连接信息')
+        print_dict(records, records[0].keys(), title='MySQL连接信息')
+        dic.update({"MySQL连接信息": records})
     except:
         pass
     try:
@@ -327,10 +363,11 @@ def analyzeNavicat(reg :str):
                 record[k] = str(mariadb[v][k])
             records.append(record)
             count_mariadb += 1
-        print_dict(records,records[0].keys(),title='MariaDB连接信息')
+        print_dict(records, records[0].keys(), title='MariaDB连接信息')
+        dic.update({"MariaDB连接信息": records})
     except:
         pass
-    
+
     try:
         mongodb = get_mongodb_info(connections['NavicatMongoDB'])
         records = []
@@ -341,7 +378,8 @@ def analyzeNavicat(reg :str):
                 record[k] = str(mongodb[v][k])
             records.append(record)
             count_mongodb += 1
-        print_dict(records,records[0].keys(),title='MongoDB连接信息')
+        print_dict(records, records[0].keys(), title='MongoDB连接信息')
+        dic.update({"MongoDB连接信息": records})
     except:
         pass
 
@@ -355,7 +393,8 @@ def analyzeNavicat(reg :str):
                 record[k] = str(sqlserver[v][k])
             records.append(record)
             count_sqlserver += 1
-        print_dict(records,records[0].keys(),title='SQLServer连接信息')
+        print_dict(records, records[0].keys(), title='SQLServer连接信息')
+        dic.update({"SQLServer连接信息": records})
     except:
         pass
 
@@ -369,10 +408,11 @@ def analyzeNavicat(reg :str):
                 record[k] = str(oracle[v][k])
             records.append(record)
             count_oracle += 1
-        print_dict(records,records[0].keys(),title='Oracle连接信息')
+        print_dict(records, records[0].keys(), title='Oracle连接信息')
+        dic.update({"Oracle连接信息": records})
     except:
         pass
-    
+
     try:
         postgres = get_postgres_info(connections['NavicatPG'])
         records = []
@@ -383,7 +423,8 @@ def analyzeNavicat(reg :str):
                 record[k] = str(postgres[v][k])
             records.append(record)
             count_postgres += 1
-        print_dict(records,records[0].keys(),title='PostgreSQL连接信息')
+        print_dict(records, records[0].keys(), title='PostgreSQL连接信息')
+        dic.update({"PostgreSQL连接信息": records})
     except:
         pass
 
@@ -397,7 +438,9 @@ def analyzeNavicat(reg :str):
                 record[k] = str(sqlite[v][k])
             records.append(record)
             count_sqlite += 1
-        print_dict(records,records[0].keys(),title='Sqlite连接信息')
+        print_dict(records, records[0].keys(), title='Sqlite连接信息')
+        dic.update({"Sqlite连接信息": records})
     except:
         pass
     print_yellow('[提示]---->如果内容显示不全，请将终端全屏后再次执行')
+    return dic
