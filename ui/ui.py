@@ -238,7 +238,7 @@ class UI(QObject):
         author_text = QLabel('''邮箱：wxjzcroot@gmail.com<br>
         GitHub：<a href=\"https://github.com/WXjzcccc\">https://github.com/WXjzcccc</a><br>
         博客：<a href=\"https://www.cnblogs.com/WXjzc\">https://www.cnblogs.com/WXjzc</a>''')
-        intro_label.setOpenExternalLinks(True)
+        author_text.setOpenExternalLinks(True)
 
         contributors_label = QLabel("<h3>贡献者</h3>")
         contributors_text = QLabel('''[1]WXjzc,<a href=\"https://github.com/WXjzcccc\">https://github.com/WXjzcccc</a><br>

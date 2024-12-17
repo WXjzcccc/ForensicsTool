@@ -45,7 +45,6 @@ def my_dict_to_table(data: dict):
             lst_data = []
             for line in value:
                 tmp = []
-                print(line)
                 for v in names:
                     tmp.append(line[v])
                 lst_data.append(tmp)

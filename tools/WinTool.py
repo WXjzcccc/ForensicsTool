@@ -89,7 +89,10 @@ class WinTool:
             return {}
         command = [nthash, '--sam', self._sam, '--system', self._system]
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout = result.stdout.decode('utf-8')
+        try:
+            stdout = result.stdout.decode('utf-8')
+        except UnicodeDecodeError:
+            stdout = result.stdout.decode('gbk')
         lines = stdout.splitlines()
         ret = []
         for line in lines:
