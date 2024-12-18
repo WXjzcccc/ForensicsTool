@@ -230,6 +230,7 @@ class Starter(QObject):
         if not filepath:
             emit_data(signal, widget, "[×]请输入路径和密钥！")
         dic = {}
+        filepath = filepath.replace('"', '')
         if os.path.isdir(filepath):
             dirs = os.listdir(filepath)
             ntuser = []
@@ -243,8 +244,13 @@ class Starter(QObject):
                 dic.update({'SYSTEM': filepath + '/SYSTEM'})
             if 'SOFTWARE' in dirs:
                 dic.update({'SOFTWARE': filepath + '/SOFTWARE'})
-        data1, data2 = analyzeWin(dic)
-        ret1 = my_dict_to_table(data1)
-        ret2 = my_table_to_table(data2, ['键', '值'])
-        ret1.update(ret2)
-        emit_data(signal, widget, ret1)
+            if len(dic) == 4:
+                data1, data2 = analyzeWin(dic)
+                ret1 = my_dict_to_table(data1)
+                ret2 = my_table_to_table(data2, ['键', '值'])
+                ret1.update(ret2)
+                emit_data(signal, widget, ret1)
+            else:
+                emit_data(signal, widget, "请确保目录中存在SAM、SOFTWARE、SYSTEM和NTUSER.DAT注册表文件")
+        else:
+            emit_data(signal, widget, "请输入注册表的父目录！")
