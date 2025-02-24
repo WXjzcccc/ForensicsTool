@@ -170,10 +170,15 @@ class WinTool:
             for v in software_key.subkeys():
                 if v.name().endswith(str(vtype)):
                     sid = v.name()
+            hint_text = ''
+            try:
+                hint_text = hint.decode('utf-8')
+            except UnicodeDecodeError:
+                hint_text = hint.decode('utf-16le')
             dic.update({
                 '用户名': username,
                 'SID': sid,
-                '密码提示': hint.decode('utf8'),
+                '密码提示': hint_text,
                 '过期时间': expires
             })
             dic.update(f_info)
