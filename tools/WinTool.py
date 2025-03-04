@@ -310,6 +310,11 @@ class WinTool:
                 return True
         return False
 
+    def byte2mac(self, byte_data: bytes) -> str:
+        hex_str = byte_data.hex()
+        formatted_mac = '-'.join(hex_str[i:i + 2] for i in range(0, len(hex_str), 2))
+        return formatted_mac.upper()
+
     def get_net_info(self) -> list:
         lst = []
         if self._system == '':
@@ -318,8 +323,10 @@ class WinTool:
         reg = Registry.Registry(self._system)
         interface_key = reg.open(r'ControlSet001\Services\Tcpip\Parameters\Interfaces')
         device_key = reg.open(r'ControlSet001\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}')
+        mac_key = reg.open(r'ControlSet001\Control\NetworkSetup2\Interfaces')
         keys = interface_key.subkeys()
         _keys = device_key.subkeys()
+        _mac_keys = mac_key.subkeys()
         for v in keys:
             dic = {}
             dic.update({'名称': '/'})
@@ -328,9 +335,12 @@ class WinTool:
                     connection = _.subkey('connection')
                     dic.update(
                         {'名称': connection.value('Name').value() if self.check_key('Name', connection) else '/'})
-            dic.update({'IP地址': v.value('IPAddress').value()[0] if self.check_key('IPAddress', v) else '/'})
-            dic.update({'子网掩码': v.value('SubnetMask').value()[0] if self.check_key('SubnetMask', v) else '/'})
-            dic.update({'网关': v.value('DefaultGateway').value()[0] if self.check_key('DefaultGateway', v) else '/'})
+            for _ in _mac_keys:
+                if v.name().upper() == _.name():
+                    kernel = _.subkey('Kernel')
+                    dic.update({'当前MAC地址': self.byte2mac(kernel.value('CurrentAddress').value()) if self.check_key('CurrentAddress', kernel) else '/'})
+                    dic.update({'物理MAC地址': self.byte2mac(kernel.value('PermanentAddress').value()) if self.check_key(
+                        'PermanentAddress', kernel) else '/'})
             dic.update(
                 {'DHCP网络地址': v.value('DhcpIPAddress').value() if self.check_key('DhcpIPAddress', v) else '/'})
             dic.update({'DHCP网关': v.value('DhcpDefaultGateway').value()[0] if self.check_key('DhcpDefaultGateway',
@@ -343,6 +353,9 @@ class WinTool:
             dic.update({'过期时间': self.timestamp(v.value('LeaseTerminatesTime').value()) if self.check_key(
                 'LeaseTerminatesTime', v) else '/'})
             dic.update({'DHCP服务地址': v.value('DhcpServer').value() if self.check_key('DhcpServer', v) else '/'})
+            dic.update({'IP地址': v.value('IPAddress').value()[0] if self.check_key('IPAddress', v) else '/'})
+            dic.update({'子网掩码': v.value('SubnetMask').value()[0] if self.check_key('SubnetMask', v) else '/'})
+            dic.update({'网关': v.value('DefaultGateway').value()[0] if self.check_key('DefaultGateway', v) else '/'})
             lst.append(dic)
         return lst
 

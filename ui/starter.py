@@ -46,7 +46,10 @@ def my_dict_to_table(data: dict):
             for line in value:
                 tmp = []
                 for v in names:
-                    tmp.append(line[v])
+                    if v in line.keys():
+                        tmp.append(line[v])
+                    else:
+                        tmp.append('/')
                 lst_data.append(tmp)
             lst.append(lst_data)
             my_dic[key] = lst
