@@ -1,2 +1,3 @@
 1.小红书，密码为xhsdev，选择sqlcipher3直接解密
 2.微信的imei，现在可以通过files/KeyInfo.bin获取了，需要解密文件，算法为RC4，密钥为_wEcHAT_
+3.MosGram(泡泡)，密码为cust_id的md5值，在sp目录的account_config.xml文件中，使用SQLCipher4参数解密

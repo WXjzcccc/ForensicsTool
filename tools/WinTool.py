@@ -381,6 +381,10 @@ class WinTool:
             {'发行ID': root_key.value('ReleaseID').value() if self.check_key('ReleaseID', root_key) else '/'})
         system_info.update(
             {'产品ID': root_key.value('ProductID').value() if self.check_key('ProductID', root_key) else '/'})
+        system_info.update(
+            {'注册所有者': root_key.value('RegisteredOwner').value() if self.check_key('RegisteredOwner', root_key) else '/'})
+        system_info.update(
+            {'注册组织': root_key.value('RegisteredOrganization').value() if self.check_key('RegisteredOrganization', root_key) else '/'})
         product_key = reg.open(r'Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform')
         system_info.update({'产品密钥备份(非当前密钥)': product_key.value(
             'BackupProductKeyDefault').value() if self.check_key('BackupProductKeyDefault', product_key) else '/'})
