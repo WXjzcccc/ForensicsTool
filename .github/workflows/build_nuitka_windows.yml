@@ -1,0 +1,54 @@
+name: Build with Nuitka on Windows
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-nuitka:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检查代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装依赖和 Nuitka
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka
+
+      - name: 打包主程序
+        run: |
+          python -m nuitka `
+            --standalone `
+            --output-dir=dist `
+            --include-data-dir=lib=lib `
+            --enable-plugin=pyside6 `
+            --include-data-files=lib/ntHashFromRegFile.exe=lib/ntHashFromRegFile.exe `
+            --include-data-files=lib/sqlite3.exe=lib/sqlite3.exe `
+            --include-data-files=icon.ico=icon.ico `
+            --include-data-files=$(python -c "import jpype; import os; print(os.path.join(os.path.dirname(os.path.dirname(jpype.__file__)), 'org.jpype.jar'))")=org.jpype.jar `
+            --windows-console-mode=disable `
+            --windows-icon-from-ico=icon.ico `
+            --include-qt-plugins=all `
+            --include-module=PySide6.QtCore `
+            --include-module=PySide6.QtGui `
+            --include-module=PySide6.QtWidgets `
+            --assume-yes-for-downloads `
+            --show-progress `
+            ForensicsTool.py
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ForensicsTool
+          path: dist/ForensicsTool.dist
+          retention-days: 3
