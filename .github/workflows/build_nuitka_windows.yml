@@ -35,6 +35,7 @@ jobs:
             --include-data-dir=ui=ui `
             --include-data-files=lib/ntHashFromRegFile.exe=lib/ntHashFromRegFile.exe `
             --include-data-files=lib/sqlite3.exe=lib/sqlite3.exe `
+            --include-data-files=$(python -c "import jpype; import os; print(os.path.join(os.path.dirname(jpype.__file__), 'org.jpype.jar'))")=org.jpype.jar `
             --include-qt-plugins=all `
             --enable-plugin=pyside6 `
             --include-module=PySide6.QtCore `
