@@ -25,7 +25,7 @@ jobs:
           pip install -r requirements.txt
           pip install nuitka
 
-      - name: 打包主程序 (main.py)
+      - name: 打包主程序
         run: |
           python -m nuitka `
             --standalone `
