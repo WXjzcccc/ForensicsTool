@@ -1,6 +1,6 @@
 import os
 
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import Signal, QObject, QEventLoop
 from tools.DBeaverTool import analyzeDbeaer
 from tools.DbPwdTool import DbPwdTool
 from tools.DbTool import DbTool
@@ -12,6 +12,7 @@ from tools.NavicatTool import analyzeNavicat
 from tools.UTools import analyzeUTools
 from tools.WinTool import analyzeWin
 from tools.XshellTool import analyzeXshell
+from tools.CrackTool import CrackTool
 
 
 def color_emit_str(signal, widget, text, color):
@@ -61,6 +62,8 @@ class Starter(QObject):
     decrypt_database_signal = Signal(object, str)
     analyze_file_signal = Signal(object, object)
     analyze_registry_signal = Signal(object, object)
+    forensics_crack_signal = Signal(object, str)
+    crack_tool = None
 
     def passwd_calc(self, mission: int, uin: str = None, imei: str = None, wxid: str = None, token: str = None,
                     uid: str = None, widget: QObject = None):
@@ -257,3 +260,23 @@ class Starter(QObject):
                 emit_data(signal, widget, "请确保目录中存在SAM、SOFTWARE、SYSTEM和NTUSER.DAT注册表文件")
         else:
             emit_data(signal, widget, "请输入注册表的父目录！")
+
+    def forensics_crack(self, mission: int, target: str, mac: str, region: str, length: str, widget: QObject):
+        self.crack_tool = CrackTool(self.forensics_crack_signal,widget)
+        print(mission, target, mac, region, length)
+        signal = self.forensics_crack_signal
+        loop = QEventLoop()
+        if mission == 1:
+            try:
+                [int(v) if v!="" else v for v in mac.split(",")]
+                int(region) if region != "" else ""
+                int(length) if length != "" else ""
+            except ValueError:
+                color_emit_str(signal, widget, "[×]region、length参数必须是数字", "red")
+            self.crack_tool.crack_airdrop(mission, target, mac, region, length)
+        elif mission == 2:
+            self.crack_tool.crack_wx_uin(mission, target)
+        loop.exec_()
+
+    def stop_crack(self):
+        self.crack_tool.qt_process.kill()

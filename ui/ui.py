@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide6.QtCore import Slot, QObject
+from PySide6.QtCore import Slot, QObject, QProcess
 from PySide6.QtWidgets import QHBoxLayout, QComboBox, QLabel, QGridLayout, QLineEdit, QTextEdit, QWidget, QPushButton, \
     QVBoxLayout, QTableWidget, QTableWidgetItem, QTabWidget, QMessageBox
 
@@ -39,6 +39,7 @@ class UI(QObject):
             "数据库解密": None,
             "数据提取": None,
             "注册表分析": None,
+            "暴力破解": None,
             "关于": None,
         }
         self.missions = {
@@ -71,21 +72,39 @@ class UI(QObject):
             "uid": "默往（通常在shared_prefs/im.xml中的userId的值）、抖音（数据库文件名中的id）计算密钥需要的内容、QQ（msf_mmkv_file中QQ号对应的uid）",
             "file": "指定需要处理的文件",
         }
+        self.crack_missions = {
+            1: "AirDrop手机号爆破",
+            2: "微信UIN爆破"
+        }
+        self.crack_params = {
+            "target": "目标列表，以,进行分隔",
+            "mac": "AirDrop要爆破的手机号段，以,进行分隔，如138,139",
+            "region": "AirDrop要爆破的区号，如86、85、1",
+            "length": "AirDrop要爆破的手机号长度（去除区号和号段）",
+        }
         self.starter = Starter()
 
-    def getComboBox(self, ids: List[int]) -> QComboBox:
+    def getComboBox(self, ids: List[int], combo_type: int = 1) -> QComboBox:
         combo = QComboBox()
-        for id in ids:
-            combo.addItem(self.missions[id], id)
+        if combo_type == 1:
+            for _id in ids:
+                combo.addItem(self.missions[_id], _id)
+        elif combo_type == 2:
+            for _id in ids:
+                combo.addItem(self.crack_missions[_id], _id)
         combo.setMaximumWidth(600)
         return combo
 
-    def getInputGroup(self, param: str, acceptDrops: bool = False) -> (QLabel, QLineEdit):
+    def getInputGroup(self, param: str, accept_drops: bool = False, param_type: int = 1) -> (QLabel, QLineEdit):
         label = QLabel()
         label.setText(param)
-        line_edit = MyLineEdit(acceptDrops=acceptDrops)
-        line_edit.setPlaceholderText(self.params.get(param))
-        line_edit.setToolTip(self.params.get(param))
+        line_edit = MyLineEdit(acceptDrops=accept_drops)
+        if param_type == 1:
+            line_edit.setPlaceholderText(self.params.get(param))
+            line_edit.setToolTip(self.params.get(param))
+        elif param_type == 2:
+            line_edit.setPlaceholderText(self.crack_params.get(param))
+            line_edit.setToolTip(self.crack_params.get(param))
         return label, line_edit
 
     def init_passwd_calc(self):
@@ -230,6 +249,48 @@ class UI(QObject):
         tab.clear()
         self.starter.analyze_registry(path, tab)
 
+    def init_forensics_crack(self):
+        widget = QWidget()
+        layout = QGridLayout()
+        mission_label = QLabel("请选择任务")
+        combo = self.getComboBox([1,2],2)
+        layout.addWidget(mission_label, 0, 0, 1, 1)
+        layout.addWidget(combo, 0, 1, 1, 3)
+        target_label, target_line = self.getInputGroup("target", param_type=2)
+        layout.addWidget(target_label, 1, 0, 1, 1)
+        layout.addWidget(target_line, 1, 1, 1, 1)
+        mac_label, mac_line = self.getInputGroup("mac", param_type=2)
+        layout.addWidget(mac_label, 1, 2, 1, 1)
+        layout.addWidget(mac_line, 1, 3, 1, 1)
+        region_label, region_line = self.getInputGroup("region", param_type=2)
+        layout.addWidget(region_label, 2, 0, 1, 1)
+        layout.addWidget(region_line, 2, 1, 1, 1)
+        length_label, length_line = self.getInputGroup("length", param_type=2)
+        layout.addWidget(length_label, 2, 2, 1, 1)
+        layout.addWidget(length_line, 2, 3, 1, 1)
+        button = QPushButton("开始")
+        button.clicked.connect(
+            lambda: self.handle_forensics_crack(int(combo.currentData()), target_line.text(), mac_line.text(),
+                                                 region_line.text(), length_line.text(), output_field))
+        hbox = QHBoxLayout()
+        stop_button = QPushButton("停止")
+        stop_button.clicked.connect(lambda: self.starter.stop_crack())
+        clear_button = QPushButton("清空输出")
+        clear_button.clicked.connect(lambda: output_field.clear())
+        hbox.addWidget(button)
+        hbox.addWidget(stop_button)
+        hbox.addWidget(clear_button)
+        layout.addLayout(hbox, 3, 0, 1, 4)
+        output_field = QTextEdit()
+        output_field.setReadOnly(True)
+        layout.addWidget(output_field, 4, 0, 1, 4)
+        widget.setLayout(layout)
+        self.starter.forensics_crack_signal.connect(self.update_text_out)
+        self.ui_widgets["暴力破解"] = widget
+
+    def handle_forensics_crack(self, mission: int, target: str, mac: str, region: str, length: str, output_field: QTextEdit):
+        self.starter.forensics_crack(mission, target, mac, region, length, output_field)
+
     def init_about(self):
         widget = QWidget()
         layout = QVBoxLayout()
@@ -276,6 +337,7 @@ class UI(QObject):
         self.init_decrypt_database()
         self.init_analyze_file()
         self.init_analyze_registry()
+        self.init_forensics_crack()
         self.init_about()
         return self.ui_widgets
 

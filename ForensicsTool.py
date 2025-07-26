@@ -1,5 +1,6 @@
 import sys
 
+from PySide6.QtCore import QProcess
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QListWidget, QStackedWidget
 from qt_material import apply_stylesheet
@@ -9,7 +10,6 @@ from ui.ui import UI
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("ForensicsTool")
         self.setWindowIcon(QIcon("./icon.ico"))
         self.resize(800, 600)
@@ -27,7 +27,6 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         ui = UI()
         ui_widgets = ui.init_ui()
-
         for key, value in ui_widgets.items():
             self.sidebar_list.addItem(key)
             self.stacked_widget.addWidget(value)
