@@ -34,6 +34,7 @@ jobs:
             --enable-plugin=pyside6 `
             --include-data-files=lib/ntHashFromRegFile.exe=lib/ntHashFromRegFile.exe `
             --include-data-files=lib/sqlite3.exe=lib/sqlite3.exe `
+            --include-data-files=lib/ForensicsCracker.exe=lib/ForensicsCracker.exe `
             --include-data-files=icon.ico=icon.ico `
             --include-data-files=$(python -c "import jpype; import os; print(os.path.join(os.path.dirname(os.path.dirname(jpype.__file__)), 'org.jpype.jar'))")=org.jpype.jar `
             --windows-console-mode=disable `
