@@ -62,12 +62,12 @@ class Navicat11Cipher:
     def decrypt(self, in_data):
         out_data = bytearray(len(in_data))
         cv = bytearray(self._iv)
-
         blocks_len = len(in_data) // 8
         left_len = len(in_data) % 8
 
         for i in range(0, blocks_len):
             temp = in_data[i * 8:i * 8 + Blowfish.block_size]
+            print(temp.hex())
             temp = self._decryptor.decrypt(temp)
             temp = self._xor_bytes(temp, cv)
             out_data[i * 8:i * 8 + Blowfish.block_size] = temp
@@ -429,7 +429,7 @@ def analyzeNavicat(reg: str):
         pass
 
     try:
-        sqlite = get_sqlite_info(connections['NavicatSQLITE'])
+        sqlite = get_sqlite_info(connections['NavicatSQLite'])
         records = []
         count_sqlite = 0
         for v in sqlite:

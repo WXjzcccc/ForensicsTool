@@ -128,10 +128,10 @@ class WinTool:
         last_failed_login = self.windows_file_time_to_datetime(last_failed_login_raw)
 
         # Log-on Count (偏移64-66字节，2字节整数)
-        invalid_pw_count = struct.unpack('<H', binary_data[64:66])[0]
+        logon_count = struct.unpack('<H', binary_data[64:66])[0]
 
         # Invalid PW Count (偏移66-68字节，2字节整数)
-        logon_count = struct.unpack('<H', binary_data[66:68])[0]
+        invalid_pw_count = struct.unpack('<H', binary_data[66:68])[0]
 
         return {
             '上次登录时间': last_login_time,
