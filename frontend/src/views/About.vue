@@ -15,7 +15,7 @@
         <h4>贡献者</h4>
         <t-list>
           <t-list-item><span>[1]WXjzc,<t-icon name="logo-github"></t-icon><a href="https://github.com/WXjzcccc" target="_blank">https://github.com/WXjzcccc</a></span></t-list-item>
-          <t-list-item><span>[1]b3nguang,<t-icon name="logo-github"></t-icon><a href="https://github.com/b3nguang" target="_blank">https://github.com/b3nguang</a></span></t-list-item>
+          <t-list-item><span>[2]b3nguang,<t-icon name="logo-github"></t-icon><a href="https://github.com/b3nguang" target="_blank">https://github.com/b3nguang</a></span></t-list-item>
         </t-list>
       </t-space>
       <t-divider />
