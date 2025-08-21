@@ -6,6 +6,7 @@ import (
 	"ForensicsTool/analyzers/passwdCalc"
 	"ForensicsTool/analyzers/winreg"
 	"ForensicsTool/tools/cracker"
+	"ForensicsTool/tools/timestamp"
 	"context"
 	"embed"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
@@ -26,7 +27,7 @@ func main() {
 	infoExtract := extractor.NewInfoExtractor()
 	reg := winreg.NewReg()
 	crack := cracker.NewForensicsCracker()
-
+	tp := timestamp.NewTimeStampParser()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "ForensicsTool",
@@ -46,6 +47,7 @@ func main() {
 			infoExtract.InitCtx(ctx)
 			reg.InitCtx(ctx)
 			crack.InitCtx(ctx)
+			tp.InitCtx(ctx)
 		},
 		Bind: []interface{}{
 			app,
@@ -54,6 +56,7 @@ func main() {
 			infoExtract,
 			reg,
 			crack,
+			tp,
 		},
 	})
 

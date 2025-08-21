@@ -7,6 +7,7 @@ export const usePageDataStore = defineStore('pageData', {
     dataExtractionStore: null,
     registryStore: null,
     bruteForceStore: null,
+    timestampStore: null,
   }),
   actions: {
     saveKeyCalculationData(data) {
@@ -23,6 +24,9 @@ export const usePageDataStore = defineStore('pageData', {
     },
     saveBruteForceData(data) {
       this.bruteForceStore = data
+    },
+    saveTimestampData(data) {
+      this.timestampStore = data
     }
   },
 });

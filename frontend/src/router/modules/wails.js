@@ -29,6 +29,11 @@ export default [
         component: () => import('@/views/BruteForce.vue')
     },
     {
+        path: '/timestamp-parser',
+        name: 'TimestampParser',
+        component: () => import('@/views/TimestampParser.vue')
+    },
+    {
         path: '/about',
         name: 'About',
         component: () => import('@/views/About.vue')

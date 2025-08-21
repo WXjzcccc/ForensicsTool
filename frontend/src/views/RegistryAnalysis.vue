@@ -27,6 +27,9 @@
               lazy-load
               bordered
               max-height="68vh"
+              :scroll="{ type: 'virtual' }"
+              dragSort='col'
+              @drag-sort="onDragSort"
           >
             <template #empty>
               <div class="empty">暂无数据</div>
@@ -80,6 +83,7 @@ const handleExtract = () => {
   AnalyzeWinReg(file).then((result) => {
       if (result.err !== "") {
         MessagePlugin.error(result.err)
+        loading.value = false
       }else {
         handleResult(result)
       }
@@ -138,6 +142,13 @@ const handleDrop = (event) => {
     }
   },false)
 }
+
+const onDragSort = ({ currentIndex, targetIndex, current, target, data, newData, e, sort }) => {
+  console.log('交换行', currentIndex, targetIndex, current, target, data, newData, e, sort);
+  if (sort === 'col') {
+    columns.value[activeTab.value] = newData;
+  }
+};
 </script>
 
 <style scoped>

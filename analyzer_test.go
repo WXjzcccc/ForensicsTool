@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ForensicsTool/analyzers/database"
+	"ForensicsTool/tools/timestamp"
 	"log"
 	"testing"
 )
@@ -42,7 +42,10 @@ func TestAnalyzer(t *testing.T) {
 	//}()
 	////log.Println(crack.CrackAirDrop("5e4cf", "8f170", "86", []string{"139"}, 8))
 	//log.Println(crack.CrackWXUin([]string{"8c6823a0ac2e55ed3a3832bb7610d5e1"}))
-	dec := &database.DecryptDatabase{}
+	//dec := &database.DecryptDatabase{}
+	//
+	//log.Println(dec.DecryptSystemDataSQLite("G:\\ZD20250709-001\\ZD20250709-001.mf", "MobileForensic@2013@"))
 
-	log.Println(dec.DecryptSystemDataSQLite("G:\\ZD20250709-001\\ZD20250709-001.mf", "MobileForensic@2013@"))
+	tt := &timestamp.TimeStampParser{}
+	log.Println(tt.ParseTimeStamp("1755761706", "UTC", "Asia/Shanghai"))
 }
