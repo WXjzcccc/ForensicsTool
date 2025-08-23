@@ -20,8 +20,8 @@ const (
 	EnMicroMsgDecryptPragma = "_pragma_cipher_compatibility=1"
 	FTSIndexDecryptPragma   = "_pragma_kdf_iter=64000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA1&_pragma_cipher_hmac_algorithm=HMAC_SHA1"
 	SQLCipher4Pragma        = ""
-	SQLCipher3Pragma        = "_pragma_cipher_page_size=1024&_pragma_kdf_iter=64000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA1&_pragma_cipher_kdf_algorithm=HMAC_SHA1"
-	WcdbPragma              = "_pragma_cipher_page_size=4096&_pragma_kdf_iter=64000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA1&_pragma_cipher_kdf_algorithm=HMAC_SHA1"
+	SQLCipher3Pragma        = "_pragma_cipher_page_size=1024&_pragma_kdf_iter=64000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA1&_pragma_cipher_hmac_algorithm=HMAC_SHA1"
+	WcdbPragma              = "_pragma_cipher_page_size=4096&_pragma_kdf_iter=64000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA1&_pragma_cipher_hmac_algorithm=HMAC_SHA1"
 	NtqqPragma              = "_pragma_cipher_page_size=4096&_pragma_kdf_iter=4000&_pragma_cipher_kdf_algorithm=PBKDF2_HMAC_SHA512"
 	FTSIndexDB              = 0
 	SQLCipher4DB            = 1
