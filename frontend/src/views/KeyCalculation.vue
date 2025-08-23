@@ -10,24 +10,34 @@
         <div class="form-grid">
         <div class="form-column">
         <t-form-item label="uin" class="form-item">
-          <t-input v-model="form.uin" placeholder="微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.uin">
+            <t-input v-model="form.uin" :placeholder="calPlace.uin"/>
+          </t-tooltip>
         </t-form-item>
 
         <t-form-item label="imei" class="form-item">
-          <t-input v-model="form.imei" placeholder="微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.imei">
+            <t-input v-model="form.imei" :placeholder="calPlace.imei"/>
+          </t-tooltip>
         </t-form-item>
 
         <t-form-item label="wxid" class="form-item">
-          <t-input v-model="form.wxid" placeholder="数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.wxid">
+            <t-input v-model="form.wxid" :placeholder="calPlace.wxid"/>
+          </t-tooltip>
         </t-form-item>
         </div>
         <div class="form-column">
         <t-form-item label="token"  class="form-item">
-          <t-input v-model="form.token" placeholder="野火IM系应用的用户token，shared_prefs/config.xml的token的值"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.token">
+            <t-input v-model="form.token" :placeholder="calPlace.token"/>
+          </t-tooltip>
         </t-form-item>
 
         <t-form-item label="uid" class="form-item">
-          <t-input v-model="form.uid" placeholder="默往（通常在shared_prefs/im.xml中的userId的值）、抖音（数据库文件名中的id）计算密钥需要的内容、QQ（msf_mmkv_file中QQ号对应的uid）"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.uid">
+            <t-input v-model="form.uid" :placeholder="calPlace.uid"/>
+          </t-tooltip>
         </t-form-item>
         </div>
         </div>
@@ -52,6 +62,13 @@ import {CalMostone, CalTiktok, CalWechat, CalWechatIndex, CalWildFire} from "../
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
 import {usePageDataStore} from "@/store/index.js";
 import {watch} from "vue";
+const calPlace = {
+  uin:"微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值",
+  imei:"微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空",
+  wxid:"数据库所属的wxid，一般情况下在解密EnMicroMsg.db的时候会一并提取，若无需要，请从shared_prefs/com.tencent.mm_preferences.xml中提取login_weixin_username的值",
+  token:"野火IM系应用的用户token，shared_prefs/config.xml的token的值",
+  uid:"默往（通常在shared_prefs/im.xml中的userId的值）、抖音（数据库文件名中的id）计算密钥需要的内容、QQ（msf_mmkv_file中QQ号对应的uid）"
+}
 const store = usePageDataStore()
 const form = ref(store.keyCalculationStore?.formData || {
   selected:"",

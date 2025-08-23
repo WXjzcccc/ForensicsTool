@@ -10,19 +10,27 @@
         <div class="form-grid">
         <div class="form-column">
         <t-form-item label="target" class="form-item">
-          <t-input v-model="form.target" placeholder="目标列表，以,分隔"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="brutePlace.target">
+            <t-input v-model="form.target" :placeholder="brutePlace.target"/>
+          </t-tooltip>
         </t-form-item>
         <t-form-item label="region" class="form-item">
-          <t-input v-model="form.region" placeholder="AirDrop要爆破的区号，如86、85、1"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="brutePlace.region">
+            <t-input v-model="form.region" :placeholder="brutePlace.region"/>
+          </t-tooltip>
         </t-form-item>
 
         </div>
         <div class="form-column">
           <t-form-item label="mac" class="form-item">
-            <t-input v-model="form.mac" placeholder="AirDrop要爆破的号段，以,进行分隔，如139,138"/>
+            <t-tooltip :overlay-style="{width:'50vh'}" :content="brutePlace.mac">
+              <t-input v-model="form.mac" :placeholder="brutePlace.mac"/>
+            </t-tooltip>
           </t-form-item>
         <t-form-item label="length"  class="form-item">
-          <t-input v-model="form.length" placeholder="AirDrop要爆破的手机号长度（出去区号和号段）"/>
+          <t-tooltip :overlay-style="{width:'50vh'}" :content="brutePlace.length">
+            <t-input v-model="form.length" :placeholder="brutePlace.length"/>
+          </t-tooltip>
         </t-form-item>
         </div>
         </div>
@@ -49,6 +57,12 @@ import {usePageDataStore} from "@/store/index.js";
 import {watch} from "vue";
 import {CancelCrack, CrackAirDrop, CrackWXUin, GetState} from "../../wailsjs/go/cracker/ForensicsCracker.js";
 const store = usePageDataStore()
+const brutePlace = {
+  target:"目标列表，以,分隔",
+  region:"AirDrop要爆破的区号，如86、85、1",
+  mac:"AirDrop要爆破的号段，以,进行分隔，如139,138",
+  length:"AirDrop要爆破的手机号长度（除去区号和号段）",
+}
 const form = ref(store.bruteForceStore?.formData || {
   selected:"",
   target:"",
