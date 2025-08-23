@@ -2,9 +2,11 @@ package tool
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/beevik/etree"
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"github.com/iancoleman/orderedmap"
+	"os"
 	"strings"
 )
 
@@ -38,11 +40,18 @@ func AnalyzeHawk2(filePath, pwd string) (*orderedmap.OrderedMap, error) {
 		@param	pwd:		cipher_key，保存在crypto.KEY_256.xml或crypto.KEY_128.xml中
 		@return:			解析结果、错误
 	*/
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a file", filePath)
+	}
 	result := orderedmap.New()
 	result.SetEscapeHTML(false)
 	var tmp []*orderedmap.OrderedMap
 	doc := etree.NewDocument()
-	if err := doc.ReadFromFile(filePath); err != nil {
+	if err = doc.ReadFromFile(filePath); err != nil {
 		return nil, err
 	}
 	root := doc.Root()

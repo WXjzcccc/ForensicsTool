@@ -79,6 +79,13 @@ func (d *DecryptDatabase) DecryptEnMicroMsg(dbPath, password string) *DecryptRes
 		@param password	: 解密密码
 		@return		 	: 解密后的数据库路径、wxid、error
 	*/
+	fileInfo, err := os.Stat(dbPath)
+	if err != nil {
+		return &DecryptResult{"", "", err.Error()}
+	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	pwd := url.QueryEscape(password)
 	dbName := fmt.Sprintf("%s?_key=%s&%s", dbPath, pwd, EnMicroMsgDecryptPragma)
 	db, err := sql.Open("sqlite3", dbName)
@@ -111,6 +118,13 @@ func (d *DecryptDatabase) decryptNormal(dbPath, password string, dbType int) *De
 		@param password	: 解密密码
 		@return		 	: 解密后的数据库路径、wxid（恒定为空字符串）、error
 	*/
+	fileInfo, err := os.Stat(dbPath)
+	if err != nil {
+		return &DecryptResult{"", "", err.Error()}
+	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	var dbName string
 	pwd := url.QueryEscape(password)
 	switch dbType {
@@ -160,6 +174,13 @@ func (d *DecryptDatabase) DecryptNtqqDB(dbPath, password string) *DecryptResult 
 		@param password	: 解密密码
 		@return		 	: 解密后的数据库路径、wxid（恒定为空字符串）、error
 	*/
+	fileInfo, err := os.Stat(dbPath)
+	if err != nil {
+		return &DecryptResult{"", "", err.Error()}
+	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	pathBak := dbPath + ".bak"
 	fr, err := os.OpenFile(dbPath, os.O_RDWR, 0666)
 	if err != nil {
@@ -246,6 +267,9 @@ func (d *DecryptDatabase) DecryptAMapDB(dbPath string) *DecryptResult {
 	if err != nil {
 		return &DecryptResult{"", "", fmt.Sprintf("获取文件%s状态失败：%v", dbPath, err)}
 	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	size := fileInfo.Size() / 1024
 	uintNum := uint32(size)
 	// 创建一个4字节的字节切片
@@ -307,6 +331,13 @@ func (d *DecryptDatabase) DecryptDingTalkDB(dbPath, password string) *DecryptRes
 		@param password	: 解密密码
 		@return		 	: 解密后的数据库路径、wxid（恒定为空字符串）、error
 	*/
+	fileInfo, err := os.Stat(dbPath)
+	if err != nil {
+		return &DecryptResult{"", "", err.Error()}
+	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	cpus := []string{"armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64", "mips", "mips64"}
 	device := strings.Split(password, "/")
 	if len(device) != 5 {
@@ -349,6 +380,13 @@ func (d *DecryptDatabase) DecryptSystemDataSQLite(dbPath, password string) *Decr
 		@param password	: 解密密码
 		@return		 	: 解密后的数据库路径、wxid（恒定为空字符串）、error
 	*/
+	fileInfo, err := os.Stat(dbPath)
+	if err != nil {
+		return &DecryptResult{"", "", err.Error()}
+	}
+	if fileInfo.IsDir() {
+		return &DecryptResult{"", "", fmt.Sprintf("%s is not a file", dbPath)}
+	}
 	file, err := os.Open(dbPath)
 	savePath := dbPath + "_dec"
 	decFile, err := os.Create(savePath)

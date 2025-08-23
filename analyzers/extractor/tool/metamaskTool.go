@@ -15,6 +15,13 @@ func AnalyzeMetaMask(filePath string) (*orderedmap.OrderedMap, error) {
 		@param	filePath:	persist-root文件
 		@return:			解析结果、错误
 	*/
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a file", filePath)
+	}
 	result := orderedmap.New()
 	result.SetEscapeHTML(false)
 	var walletInfoList []*orderedmap.OrderedMap

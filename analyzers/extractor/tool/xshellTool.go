@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"github.com/iancoleman/orderedmap"
 	"gopkg.in/ini.v1"
@@ -151,7 +152,14 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 	conns.SetEscapeHTML(false)
 	var xsh []*orderedmap.OrderedMap
 	var xft []*orderedmap.OrderedMap
-	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+	fileInfo, err := os.Stat(folder)
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a folder", folder)
+	}
+	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

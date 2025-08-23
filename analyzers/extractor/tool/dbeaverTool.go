@@ -2,6 +2,7 @@ package tool
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"github.com/iancoleman/orderedmap"
 	"github.com/tidwall/gjson"
@@ -36,7 +37,14 @@ func AnalyzeDbeaver(folder string) (*orderedmap.OrderedMap, error) {
 	var tmp []*orderedmap.OrderedMap
 	var pwdJson gjson.Result
 	var conJson gjson.Result
-	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+	fileInfo, err := os.Stat(folder)
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a folder", folder)
+	}
+	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

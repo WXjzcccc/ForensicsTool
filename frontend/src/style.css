@@ -22,3 +22,42 @@ body {
   height: 100vh;
   text-align: center;
 }
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 92vh;
+}
+.form-column {
+  display: flex;
+  flex-direction: column;
+  width: 40vw;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.result-container {
+  display: flex;
+  flex-direction: column;
+}
+.form-item {
+  width: 35vw;
+}
+.form-card {
+  border-color: blue;
+  border-width: 3px;
+}
+.result-card {
+  flex: 1;
+  overflow-y: hidden;
+  border-color: blue;
+  border-width: 3px;
+}
+.result-output {
+  text-align: left;
+}
+.button {
+  border-radius: 25px;
+  width: 35vw
+}

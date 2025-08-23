@@ -9,15 +9,14 @@
 
 <style scoped>
 t-content {
-  padding: 20px;
   background: var(--td-bg-color-container);
-  height: calc(100vh - 80px);
+  height: 100vh;
   overflow: auto;
 }
 .main-content-container {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 3vh 1vw;
   background: var(--td-bg-color-container);
 }
 </style>

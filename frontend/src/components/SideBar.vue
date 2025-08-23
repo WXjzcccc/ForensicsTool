@@ -1,10 +1,12 @@
 <template>
   <t-aside class="sidebar-container">
     <t-menu
+        class="menu"
         theme="light"
         defaultValue="KeyCalculation"
         :collapsed="false"
         @change="handleMenuChange"
+        width="15vw"
     >
       <t-menu-item value="KeyCalculation">
         <template #icon>
@@ -64,16 +66,18 @@ const handleMenuChange = (value) => {
 
 <style scoped>
 .sidebar-container {
-  width: 20vh;
-  height: 100%;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  width: 15vw;
+  height: 92vh;
+  overflow-y: clip;
+  overflow-x: visible;
   /*border-right: 1px solid var(--td-component-stroke);*/
   flex-shrink: 0;
+  padding-top: 3vh;
+  padding-bottom: 5vh;
 }
-
-/* 确保菜单项不会超出容器 */
-t-menu {
-  height: 100%;
+.menu {
+  border: 3px solid blue;
+  border-radius: 10px;
+  margin-left: 0.5vh;
 }
 </style>

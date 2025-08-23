@@ -417,7 +417,14 @@ func (r *Reg) AnalyzeWinReg(folder string) *RegResult {
 	var samReg registry.Registry
 	var softwareReg registry.Registry
 	var ntRegList []registry.Registry
-	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+	fileInfo, err := os.Stat(folder)
+	if err != nil {
+		return &RegResult{nil, err.Error()}
+	}
+	if !fileInfo.IsDir() {
+		return &RegResult{nil, fmt.Sprintf("%s is not a folder", folder)}
+	}
+	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		filename := info.Name()
 		switch filename {
 		case "SYSTEM":

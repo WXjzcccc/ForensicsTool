@@ -1,41 +1,41 @@
 <template>
   <div class="page-container">
     <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 7vh)"  label-align="left">
-        <t-form-item label="选择任务" style="width: 100vh">
+      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
+        <t-form-item label="选择任务" style="width: 100vw">
           <t-select v-model="form.selected" placeholder="请选择任务">
             <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
           </t-select>
         </t-form-item>
         <div class="form-grid">
         <div class="form-column">
-        <t-form-item label="uin" class="form-item">
-          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.uin">
+        <t-form-item label="微信uin" class="form-item">
+          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.uin">
             <t-input v-model="form.uin" :placeholder="calPlace.uin"/>
           </t-tooltip>
         </t-form-item>
 
         <t-form-item label="imei" class="form-item">
-          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.imei">
+          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.imei">
             <t-input v-model="form.imei" :placeholder="calPlace.imei"/>
           </t-tooltip>
         </t-form-item>
 
         <t-form-item label="wxid" class="form-item">
-          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.wxid">
+          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.wxid">
             <t-input v-model="form.wxid" :placeholder="calPlace.wxid"/>
           </t-tooltip>
         </t-form-item>
         </div>
         <div class="form-column">
         <t-form-item label="token"  class="form-item">
-          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.token">
+          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.token">
             <t-input v-model="form.token" :placeholder="calPlace.token"/>
           </t-tooltip>
         </t-form-item>
 
         <t-form-item label="uid" class="form-item">
-          <t-tooltip :overlay-style="{width:'50vh'}" :content="calPlace.uid">
+          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.uid">
             <t-input v-model="form.uid" :placeholder="calPlace.uid"/>
           </t-tooltip>
         </t-form-item>
@@ -43,10 +43,14 @@
         </div>
       </t-form>
       <div style="height: 1vh"></div>
-      <t-button class="button" theme="primary" @click="handleCalculate"><template #icon><t-icon name="calculator"/></template>计算</t-button>
-      <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      <t-space>
+        <t-button class="button" theme="primary" @click="handleCalculate"><template #icon><t-icon name="calculator"/></template>计算</t-button>
+        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      </t-space>
     </t-card>
+    <div style="height: 1vh"></div>
     <t-card class="result-card">
+      <t-empty v-if="resultText===''" class="empty"/>
       <div class="result-container">
         <div class="result-output" v-html="resultText"/>
       </div>
@@ -153,35 +157,19 @@ watch(resultText, () => {
   }
 });
 </script>
-
+<!-- 如果只在style.css中定义，编译后不生效，暂时不知道原因 -->
 <style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 92vh;
+.empty{
+  margin-top:20vh
 }
-.form-column {
-  display: flex;
-  flex-direction: column;
-  width: 55vh;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.form-card {
+  border-color: blue;
+  border-width: 3px;
 }
 .result-card {
   flex: 1;
-  overflow-y: scroll;
+  overflow-y: hidden;
+  border-color: blue;
+  border-width: 3px;
 }
-.result-output {
-  text-align: left;
-}
-.form-item {
-  width: 50vh;
-}
-.button {
-  border-radius: 25px;
-  width: 50%
-}
-
 </style>

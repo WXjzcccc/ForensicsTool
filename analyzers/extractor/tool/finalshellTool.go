@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"github.com/iancoleman/orderedmap"
 	"github.com/tidwall/gjson"
@@ -51,6 +52,9 @@ func decryptFinalShell(encData string) string {
 	if err != nil {
 		return ""
 	}
+	if encData == "" {
+		return ""
+	}
 	return crypto.FromBytes(encBytes[8:]).WithKey(randomKey(encBytes[:8])).Des().ECB().PKCS5Padding().Decrypt().ToString()
 }
 
@@ -63,7 +67,14 @@ func AnalyzeFinalShell(folder string) (*orderedmap.OrderedMap, error) {
 	result.SetEscapeHTML(false)
 	var tmp []*orderedmap.OrderedMap
 	var conJson gjson.Result
-	err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+	fileInfo, err := os.Stat(folder)
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a folder", folder)
+	}
+	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

@@ -1,21 +1,21 @@
 <template>
   <div class="page-container">
     <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 7vh)"  label-align="left">
-        <t-form-item label="选择任务" style="width: 100vh">
+      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
+        <t-form-item label="选择任务" style="width: 100vw">
           <t-select v-model="form.selected" placeholder="请选择任务">
             <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
           </t-select>
         </t-form-item>
         <div class="form-grid">
           <div class="form-column">
-            <t-form-item label="file" class="form-item">
+            <t-form-item label="文件/目录" class="form-item">
               <t-input v-model="form.file" placeholder="请拖入文件或目录" @drop.prevent="handleDrop"
                        @dragover.prevent/>
             </t-form-item>
           </div>
           <div class="form-column">
-            <t-form-item label="password"  class="form-item">
+            <t-form-item label="密码"  class="form-item">
               <t-input v-model="form.password" placeholder="解密密码"/>
             </t-form-item>
           </div>
@@ -23,10 +23,14 @@
         </div>
       </t-form>
       <div style="height: 1vh"></div>
-      <t-button class="button" theme="primary" @click="handleDecrypt"><template #icon><t-icon name="lock-off"/></template>解密</t-button>
-      <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      <t-space>
+        <t-button class="button" theme="primary" @click="handleDecrypt"><template #icon><t-icon name="lock-off"/></template>解密</t-button>
+        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      </t-space>
     </t-card>
+    <div style="height: 1vh"></div>
     <t-card class="result-card">
+      <t-empty v-if="resultText===''" class="empty"/>
       <div class="result-container">
         <div class="result-output" v-html="resultText"/>
       </div>
@@ -155,35 +159,17 @@ watch(resultText, () => {
 </script>
 
 <style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 92vh;
+.empty{
+  margin-top:25vh
 }
-.form-column {
-  display: flex;
-  flex-direction: column;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-.result-container {
-  display: flex;
-  flex-direction: column;
+.form-card {
+  border-color: blue;
+  border-width: 3px;
 }
 .result-card {
   flex: 1;
-  overflow-y: scroll;
-}
-.result-output {
-  text-align: left;
-}
-.button {
-  border-radius: 25px;
-  width: 50%
-}
-.form-item {
-  width: 50vh;
+  overflow-y: hidden;
+  border-color: blue;
+  border-width: 3px;
 }
 </style>

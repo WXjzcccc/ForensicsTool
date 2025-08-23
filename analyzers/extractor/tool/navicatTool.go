@@ -8,6 +8,7 @@ import (
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blowfish"
+	"os"
 	"unicode/utf8"
 )
 
@@ -337,6 +338,13 @@ func AnalyzeNavicat(regPath string) (*orderedmap.OrderedMap, error) {
 		@param	refPath:	NTUSER.DAT注册表文件路径
 		@return:			解析结果、错误
 	*/
+	fileInfo, err := os.Stat(regPath)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a file", regPath)
+	}
 	reg, err := registry.Open(regPath)
 	if err != nil {
 		return nil, err

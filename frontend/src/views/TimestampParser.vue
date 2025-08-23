@@ -1,32 +1,36 @@
 <template>
   <div class="page-container">
     <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 7vh)"  label-align="left">
+      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
         <div class="form-grid">
           <div class="form-column">
-            <t-form-item label="原始时区" style="width: 50vh">
+            <t-form-item label="原始时区" style="width: 35vw">
               <t-select v-model="form.selectedOld" placeholder="请选择时区">
                 <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
               </t-select>
             </t-form-item>
           </div>
           <div class="form-column">
-            <t-form-item label="目标时区" style="width: 50vh">
+            <t-form-item label="目标时区" style="width: 35vw">
               <t-select v-model="form.selectedNew" placeholder="请选择时区">
                 <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
               </t-select>
             </t-form-item>
           </div>
         </div>
-        <t-form-item label="时间戳" style="width: 50vh">
+        <t-form-item label="时间戳" style="width: 35vw">
           <t-input v-model="form.ts" placeholder="请输入时间戳"></t-input>
         </t-form-item>
       </t-form>
       <div style="height: 1vh"></div>
-      <t-button class="button" theme="primary" @click="handleTrans"><template #icon><t-icon name="history"/></template>转换</t-button>
-      <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      <t-space>
+        <t-button class="button" theme="primary" @click="handleTrans"><template #icon><t-icon name="history"/></template>转换</t-button>
+        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
+      </t-space>
     </t-card>
+    <div style="height: 1vh"></div>
     <t-card class="result-card">
+      <t-empty v-if="resultText===''" class="empty"/>
       <div class="result-container">
         <div class="result-output" v-html="resultText"/>
       </div>
@@ -90,33 +94,17 @@ watch(resultText, () => {
 </script>
 
 <style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 92vh;
+.empty{
+  margin-top:25vh
 }
-.form-column {
-  display: flex;
-  flex-direction: column;
-  width: 55vh;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.form-card {
+  border-color: blue;
+  border-width: 3px;
 }
 .result-card {
   flex: 1;
-  overflow-y: scroll;
+  overflow-y: hidden;
+  border-color: blue;
+  border-width: 3px;
 }
-.result-output {
-  text-align: left;
-}
-.form-item {
-  width: 50vh;
-}
-.button {
-  border-radius: 25px;
-  width: 50%
-}
-
 </style>

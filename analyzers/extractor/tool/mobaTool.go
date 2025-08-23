@@ -121,11 +121,17 @@ func AnalyzeMobaXterm(file, masterPasswd string) (*orderedmap.OrderedMap, error)
 		@param	file:	配置文件或注册表文件
 		@return:		解析结果、错误
 	*/
+	fileInfo, err := os.Stat(file)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.IsDir() {
+		return nil, fmt.Errorf("%s is not a file", file)
+	}
 	result := orderedmap.New()
 	result.SetEscapeHTML(false)
 	var passwords []string
 	var credentials []string
-	var err error
 	if strings.HasSuffix(file, ".ini") {
 		passwords, credentials, err = getEncFromIni(file)
 		if err != nil {
