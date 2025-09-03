@@ -7,13 +7,14 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	_ "github.com/WXjzcccc/go-sqlcipher"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+
+	_ "github.com/WXjzcccc/go-sqlcipher"
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 )
 
 const (
@@ -68,8 +69,8 @@ func moveElementToFirst(slice []string, element string) []string {
 }
 
 func decryptSql(dbPath string) (string, string) {
-	dbName := strings.Replace(filepath.Base(dbPath), ".db", "", -1)
-	savePath := strings.Replace(dbPath, ".db", "_dec.db", -1)
+	dbName := strings.Replace(filepath.Base(dbPath), ".", "", -1)
+	savePath := dbPath + "_dec.db"
 	return fmt.Sprintf("ATTACH DATABASE '%s' AS '%s_dec' KEY '';SELECT sqlcipher_export('%s_dec');DETACH DATABASE '%s_dec';", savePath, dbName, dbName, dbName), savePath
 }
 
