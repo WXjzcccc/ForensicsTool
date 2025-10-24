@@ -41,11 +41,8 @@
 
 <script setup>
 import {ref} from 'vue'
-import {MessagePlugin} from 'tdesign-vue-next'
-import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
 import {usePageDataStore} from "@/store/index.js";
 import {watch} from "vue";
-import {CancelCrack, CrackAirDrop, CrackWXUin, GetState} from "../../wailsjs/go/cracker/ForensicsCracker.js";
 import {ParseTimeStamp} from "../../wailsjs/go/timestamp/TimeStampParser.js";
 const store = usePageDataStore()
 const form = ref(store.timestampData?.formData || {
@@ -58,7 +55,7 @@ const timezones = Intl.supportedValuesOf('timeZone')
 timezones.push('UTC')
 const options = ref(timezones.map((item, index) => ({
   label: item,
-  value: index + 1
+  value: item
 })))
 
 watch([form,resultText],()=>{

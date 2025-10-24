@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	_ "time/tzdata"
 )
 
 // timestampToDatetime 将时间转换为指定时区的格式化字符串
@@ -44,7 +45,7 @@ func IosTimestampToDatetime(timestamp float64, originTimezone, targetTimezone st
 
 	result, err := timestampToDatetime(convertedTime, originTimezone, targetTimezone)
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return result
 }
@@ -75,7 +76,7 @@ func DefaultTimestampToDatetime(timestamp int64, originTimezone, targetTimezone 
 
 	result, err := timestampToDatetime(dt, originTimezone, targetTimezone)
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return result
 }
@@ -94,7 +95,7 @@ func ChromeTimestampToDatetime(timestamp int64, originTimezone, targetTimezone s
 
 	result, err := timestampToDatetime(convertedTime, originTimezone, targetTimezone)
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return result
 }
@@ -120,7 +121,7 @@ func WindowsFileTimeToDatetime(timestamp uint64, originTimezone, targetTimezone 
 	}
 	result, err := timestampToDatetime(convertedTime, originTimezone, targetTimezone)
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return result
 }
@@ -166,7 +167,7 @@ func AppleTimestampToDatetime(timestamp float64, originTimezone, targetTimezone 
 
 	result, err := timestampToDatetime(dt, originTimezone, targetTimezone)
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return result
 }
