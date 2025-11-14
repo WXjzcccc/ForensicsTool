@@ -4,4 +4,4 @@ const store = createPinia();
 
 export default store;
 
-export * from './modules/page.js';
+export * from './modules/page';

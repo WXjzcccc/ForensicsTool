@@ -9,6 +9,8 @@ import (
 	"ForensicsTool/tools/timestamp"
 	"context"
 	"embed"
+
+	"github.com/donnie4w/go-logger/logger"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 
 	"github.com/wailsapp/wails/v2"
@@ -20,6 +22,8 @@ import (
 var assets embed.FS
 
 func main() {
+	logger.SetFormat(logger.FORMAT_LEVELFLAG | logger.FORMAT_DATE | logger.FORMAT_TIME | logger.FORMAT_FUNC | logger.FORMAT_RELATIVEFILENAME)
+	logger.SetRollingFileLoop("./logs", "app.log", 10, logger.MB, 10)
 	// Create an instance of the app structure
 	app := NewApp()
 	decDb := database.NewDecryptDatabase()
@@ -36,7 +40,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		DisableResize:    true,
+		Frameless:        true,
 		DragAndDrop:      &options.DragAndDrop{DisableWebViewDrop: false, EnableFileDrop: true},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		Windows:          &windows.Options{IsZoomControlEnabled: false},

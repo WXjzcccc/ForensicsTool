@@ -3,3 +3,5 @@ frontend/dist
 build/bin
 .idea
 *_test.go
+logs
+*.log

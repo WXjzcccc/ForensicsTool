@@ -42,3 +42,7 @@ func (a *App) shutdown(ctx context.Context) {
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
+
+func (a *App) GetVersion() string {
+	return "v2.3"
+}

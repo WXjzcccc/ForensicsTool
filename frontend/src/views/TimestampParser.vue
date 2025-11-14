@@ -1,56 +1,94 @@
 <template>
   <div class="page-container">
-    <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
-        <div class="form-grid">
-          <div class="form-column">
-            <t-form-item label="原始时区" style="width: 35vw">
-              <t-select v-model="form.selectedOld" placeholder="请选择时区">
-                <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
-              </t-select>
-            </t-form-item>
+    <Card class="form-card">
+      <template #content>
+      <!-- 优化布局：下拉选择框独占一行，文本输入框独占一行，按钮等分排列 -->
+      <form class="form-layout">
+        <!-- 第一行：下拉选择框 -->
+        <div class="input-row">
+          <div class="field full-width">
+            <FloatLabel class="field full-width" variant="over">
+              <label for="oldTimezone">原始时区</label>
+              <Select 
+                id="oldTimezone"
+                v-model="form.selectedOld" 
+                :options="options" 
+                optionLabel="label" 
+                optionValue="value"
+                placeholder="请选择时区"
+                v-tooltip.top="'选择原始时间戳所在的时区'"
+              />
+              </FloatLabel>
           </div>
-          <div class="form-column">
-            <t-form-item label="目标时区" style="width: 35vw">
-              <t-select v-model="form.selectedNew" placeholder="请选择时区">
-                <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
-              </t-select>
-            </t-form-item>
+          <div class="field full-width">
+            <FloatLabel class="field full-width" variant="over">
+              <label for="newTimezone">目标时区</label>
+              <Select 
+                id="newTimezone"
+                v-model="form.selectedNew" 
+                :options="options" 
+                optionLabel="label" 
+                optionValue="value"
+                placeholder="请选择时区"
+                v-tooltip.top="'选择要转换到的目标时区'"
+              />
+              </FloatLabel>
           </div>
         </div>
-        <t-form-item label="时间戳" style="width: 35vw">
-          <t-input v-model="form.ts" placeholder="请输入时间戳"></t-input>
-        </t-form-item>
-      </t-form>
-      <div style="height: 1vh"></div>
-      <t-space>
-        <t-button class="button" theme="primary" @click="handleTrans"><template #icon><t-icon name="history"/></template>转换</t-button>
-        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
-      </t-space>
-    </t-card>
-    <div style="height: 1vh"></div>
-    <t-card class="result-card">
-      <t-empty v-if="resultText===''" class="empty"/>
-      <div class="result-container">
-        <div class="result-output" v-html="resultText"/>
+        
+        <!-- 第二行：文本输入框 -->
+        <div class="field full-width">
+          <FloatLabel variant="on">
+            <InputText 
+              id="timestamp"
+              v-model="form.ts" 
+              placeholder="请输入时间戳"
+              v-tooltip.top="'输入要转换的时间戳，支持Unix时间戳'"
+            />
+            <label for="timestamp">时间戳</label>
+          </FloatLabel>
+        </div>
+      </form>
+      <!-- 第三行：按钮组 -->
+        <div class="button-row">
+          <Button class="button equal-width" @click="handleTrans">
+            <i class="pi pi-history"></i>
+            转换
+          </Button>
+          <Button class="button equal-width" severity="secondary" @click="handleClear">
+            <i class="pi pi-trash"></i>
+            清空输出
+          </Button>
+        </div>
+      </template>
+    </Card>
+    <Card class="result-card">
+      <template #content>
+      <div v-if="resultText === ''" class="empty">
+        <Empty />
       </div>
-    </t-card>
-
+        <div class="result-output" v-html="resultText"/>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {usePageDataStore} from "@/store/index.js";
-import {watch} from "vue";
-import {ParseTimeStamp} from "../../wailsjs/go/timestamp/TimeStampParser.js";
+import { ref } from 'vue'
+import { usePageDataStore } from "@/store"
+import { watch } from "vue"
+import { ParseTimeStamp } from "../../wailsjs/go/timestamp/TimeStampParser.js"
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
+import Empty from '@/components/Empty.vue'
+
 const store = usePageDataStore()
-const form = ref(store.timestampData?.formData || {
-  selectedOld:"UTC",
-  selectedNew:"Asia/Shanghai",
-  ts:""
+const form = ref(store.timestampStore?.formData || {
+  selectedOld: "UTC",
+  selectedNew: "Asia/Shanghai",
+  ts: ""
 })
-const resultText = ref(store.timestampData?.resultData || "")
+const resultText = ref(store.timestampStore?.resultData || "")
 const timezones = Intl.supportedValuesOf('timeZone')
 timezones.push('UTC')
 const options = ref(timezones.map((item, index) => ({
@@ -58,27 +96,25 @@ const options = ref(timezones.map((item, index) => ({
   value: item
 })))
 
-watch([form,resultText],()=>{
+watch([form, resultText], () => {
   store.saveTimestampData({
-    formData:form.value,
-    resultData:resultText.value
+    formData: form.value,
+    resultData: resultText.value
   })
 })
-
 
 const handleTrans = () => {
   let ori = form.value.selectedOld;
   let target = form.value.selectedNew;
   let ts = form.value.ts;
-  ParseTimeStamp(ts,ori,target).then((result)=>{
-    resultText.value += result.replaceAll("\n","<br>")
+  ParseTimeStamp(ts, ori, target).then((result) => {
+    resultText.value += result.replaceAll("\n", "<br>")
   })
 }
 
 const handleClear = () => {
   resultText.value = ""
 }
-
 
 watch(resultText, () => {
   const card = document.querySelector('.result-card');
@@ -87,21 +123,7 @@ watch(resultText, () => {
     card.scrollTop = card.scrollHeight;
   }
 });
-
 </script>
 
 <style scoped>
-.empty{
-  margin-top:25vh
-}
-.form-card {
-  border-color: blue;
-  border-width: 3px;
-}
-.result-card {
-  flex: 1;
-  overflow-y: hidden;
-  border-color: blue;
-  border-width: 3px;
-}
 </style>

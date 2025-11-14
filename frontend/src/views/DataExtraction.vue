@@ -1,89 +1,173 @@
 <template>
   <div class="page-container">
-    <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
-        <t-form-item label="选择任务" style="width: 100vw">
-          <t-select v-model="form.selected" placeholder="请选择任务">
-            <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
-          </t-select>
-        </t-form-item>
-        <div class="form-grid">
-          <div class="form-column">
-            <t-form-item class="form-item" label="文件/目录">
-              <t-input v-model="form.file" placeholder="请拖入文件或目录" @drop.prevent="handleDrop"
-                       @dragover.prevent/>
-            </t-form-item>
+    <Card class="form-card">
+      <template #content>
+      <!-- 优化布局：下拉选择框独占一行，文本输入框一行两个，按钮等分排列 -->
+      <form class="form-layout">
+        <!-- 第一行：下拉选择框 -->
+        <div class="field full-width">
+          <FloatLabel class="field full-width" variant="over">
+              <label for="selected">选择任务</label>
+            <Select 
+              id="selected"
+              v-model="form.selected" 
+              :options="options" 
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="请选择任务"
+              v-tooltip.top="'选择要执行的数据提取任务类型'"
+            />
+          </FloatLabel>
+        </div>
+        
+        <!-- 第二行：文本输入框 -->
+        <div class="input-row">
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="file"
+                v-model="form.file" 
+                placeholder="请拖入文件或目录" 
+                @drop.prevent="handleDrop"
+                @dragover.prevent
+                v-tooltip.top="'拖入要提取数据的文件或目录路径'"
+              />
+              <label for="file">文件/目录</label>
+            </FloatLabel>
           </div>
-          <div class="form-column">
-            <t-form-item class="form-item" label="密码">
-              <t-input v-model="form.password" placeholder="解密密码"/>
-            </t-form-item>
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="password"
+                v-model="form.password" 
+                placeholder="解密密码"
+                v-tooltip.top="'输入解密所需的密码（某些任务需要）'"
+              />
+              <label for="password">密码</label>
+            </FloatLabel>
           </div>
         </div>
-      </t-form>
-      <div style="height: 1vh"></div>
-      <t-space>
-        <t-button class="button" theme="primary" @click="handleExtract"><template #icon><t-icon name="search"/></template>解析</t-button>
-        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
-      </t-space>
-    </t-card>
-    <div style="height: 1vh"></div>
-    <t-card class="result-card" :loading="loading">
-      <t-empty v-if="Object.keys(tableData).length === 0" class="empty"/>
-      <t-tabs v-model="activeTab" @change="handleTabChange">
-        <t-tab-panel v-for="tab in tabs" :key="tab.value" :value="tab.value" :label="tab.label">
-          <t-table
-              :data="tableData[tab.value]"
-              :columns="columns[tab.value]"
-              row-key="id"
-              stripe
-              hover
-              size="medium"
-              fixed-rows="[0,1]"
-              @cell-click="handleCellClick"
-              lazy-load
-              bordered
-              max-height="60vh"
-              :scroll="{ type: 'virtual' }"
-              dragSort='col'
-              @drag-sort="onDragSort"
+      </form>
+      <!-- 第三行：按钮组 -->
+        <div class="button-row">
+          <Button 
+            label="解析" 
+            icon="pi pi-search" 
+            @click="handleExtract"
+            class="button equal-width"
+          />
+          <Button 
+            label="清空输出" 
+            icon="pi pi-trash" 
+            @click="handleClear"
+            severity="secondary"
+            class="button equal-width"
+          />
+        </div>
+      </template>
+    </Card>
+    <Card class="result-card" ref="resultCardRef" :loading="loading">
+      <template #content>
+      <div v-if="Object.keys(tableData).length === 0" class="empty">
+        <Empty />
+      </div>
+      <Tabs v-if="Object.keys(tableData).length !== 0" :value="getActiveTabIndex" @tab-change="handleTabChange">
+        <TabList>
+          <Tab v-for="(tab,index) in tabs" :key="tab.label" :value="index">{{ tab.label }}</Tab>
+        </TabList>
+        <TabPanels>
+        <TabPanel v-for="(tab,index) in tabs" :key="tab.label" :value="index">
+          <DataTable
+            :value="tableData[tab.value]"
+            :columns="columns[tab.value]"
+            dataKey="id"
+            stripedRows
+            removableSort
+            scrollable
+            :scrollHeight="tableScrollHeight"
+            :virtualScrollerOptions="{ itemSize: 46 }"
+            :reorderableColumns="true"
+            @column-reorder="onColumnReorder"
+            class="p-datatable-sm"
           >
+            <Column v-for="col in columns[tab.value]" :key="col.colKey" :field="col.colKey" :header="col.title" :sortable="true">
+              <template #body="{ data, field }">
+                <span :@click="handleCellClick(data[field])">{{ data[field] }}</span>
+              </template>
+            </Column>
             <template #empty>
-              <div class="empty">暂无数据</div>
+              <Empty />
             </template>
-          </t-table>
-        </t-tab-panel>
-      </t-tabs>
-    </t-card>
+          </DataTable>
+        </TabPanel>
+        </TabPanels>
+      </Tabs>
+      </template>
+    </Card>
+    <Toast position="bottom-right"/>
   </div>
 </template>
 
 <script setup>
-import {ref} from 'vue'
-import {MessagePlugin} from 'tdesign-vue-next'
-import {usePageDataStore} from "@/store/index.js";
-import {watch} from "vue";
-import {ClipboardSetText, OnFileDrop} from "../../wailsjs/runtime/runtime.js";
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { usePageDataStore } from "@/store"
+import { watch } from "vue"
+import { ClipboardSetText, OnFileDrop, OnFileDropOff } from "../../wailsjs/runtime/runtime.js"
 import {
   ExtractDbeaver,
   ExtractFinalShell, ExtractHawk2, ExtractMetaMask,
   ExtractMobaXterm,
   ExtractNavicat, ExtractXShell
-} from "../../wailsjs/go/extractor/InfoExtractor.js";
+} from "../../wailsjs/go/extractor/InfoExtractor.js"
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
+import Tabs from 'primevue/tabs'
+import Empty from '@/components/Empty.vue'
+import { useTableHeight } from '@/composables/useTableHeight.js'
+
+const toast = useToast()
 const store = usePageDataStore()
 const form = ref(store.dataExtractionStore?.formData || {
   selected: '',
   file: '',
   password: '',
 })
-const tableData = ref(store.dataExtractionStore?.tableData || {
-})
-const tabs = ref(store.dataExtractionStore?.tabsData || [
-])
+const tableData = ref(store.dataExtractionStore?.tableData || {})
+const tabs = ref(store.dataExtractionStore?.tabsData || [])
 const activeTab = ref(store.dataExtractionStore?.tabData || '')
-const columns = ref(store.dataExtractionStore?.columnsData || {
+const columns = ref(store.dataExtractionStore?.columnsData || {})
+
+// 动态计算DataTable的scrollHeight
+const tableScrollHeight = ref('60vh')
+const resultCardRef = ref(null)
+
+// 使用公共的表格高度计算函数
+const { calculateTableHeight, handleResize } = useTableHeight(resultCardRef, tableScrollHeight)
+
+// 组件挂载后设置监听
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+  // 初始计算
+  nextTick(() => {
+    calculateTableHeight()
+  })
 })
-watch([form,tableData,tabs,activeTab],()=>{
+
+// 组件卸载时移除监听
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  // 清理文件拖放监听器
+  OnFileDropOff()
+})
+
+// 计算属性，用于获取当前活动标签的索引
+const getActiveTabIndex = computed(() => {
+  const index = tabs.value.findIndex(tab => tab.value === activeTab.value)
+  return index >= 0 ? index : 0
+})
+
+watch([form, tableData, tabs, activeTab], () => {
   store.saveDataExtractionData({
     formData: form.value,
     tableData: tableData.value,
@@ -94,13 +178,13 @@ watch([form,tableData,tabs,activeTab],()=>{
 })
 
 const options = ref([
-  {label:"Navicat连接信息提取，指定文件为用户注册表文件NTUSER.DAT",value:"1"},
-  {label:"MobaXterm连接信息解密，指定文件为用户注册表文件NTUSER.DAT并给出主密码",value:"2"},
-  {label:"Dbeaver连接信息解密，指定文件为data-sources.json的父目录",value:"3"},
-  {label:"FinalShell连接信息解密，指定文件为conn文件夹",value:"4"},
-  {label:"XShell、XFtp连接信息解密，指定文件为session文件夹并给出密码（用户名+sid）",value:"5"},
-  {label:"Hawk2.xml数据解密，给出密码（crypto.KEY_128(256).xml中的base64值）",value:"6"},
-  {label:"MetaMask解析，指定文件为persis-root",value:"7"},
+  { label: "Navicat连接信息提取，指定文件为用户注册表文件NTUSER.DAT", value: "1" },
+  { label: "MobaXterm连接信息解密，指定文件为用户注册表文件NTUSER.DAT并给出主密码", value: "2" },
+  { label: "Dbeaver连接信息解密，指定文件为data-sources.json的父目录", value: "3" },
+  { label: "FinalShell连接信息解密，指定文件为conn文件夹", value: "4" },
+  { label: "XShell、XFtp连接信息解密，指定文件为session文件夹并给出密码（用户名+sid）", value: "5" },
+  { label: "Hawk2.xml数据解密，给出密码（crypto.KEY_128(256).xml中的base64值）", value: "6" },
+  { label: "MetaMask解析，指定文件为persis-root", value: "7" },
 ])
 
 const loading = ref(false)
@@ -111,74 +195,74 @@ const handleExtract = () => {
   let password = form.value.password
   let func = null
   if (file === "" || file === undefined || file === null) {
-    MessagePlugin.error("文件参数异常！")
+    toast.add({ severity: 'error', summary: '错误', detail: '文件参数异常！', life: 3000 })
     loading.value = false
     return
   }
   switch (form.value.selected) {
     case "1":
       func = ExtractNavicat
-      break;
+      break
     case "2":
       func = ExtractMobaXterm
-      break;
+      break
     case "3":
       func = ExtractDbeaver
-      break;
+      break
     case "4":
       func = ExtractFinalShell
-      break;
+      break
     case "5":
       func = ExtractXShell
-      break;
+      break
     case "6":
       func = ExtractHawk2
-      break;
+      break
     case "7":
       func = ExtractMetaMask
-      break;
+      break
   }
   if (form.value.selected === "2" ||
       form.value.selected === "5" ||
-  form.value.selected === "6"){
+      form.value.selected === "6") {
     if (password === "" || password === undefined || password === null) {
-      MessagePlugin.error("密码参数异常！")
+      toast.add({ severity: 'error', summary: '错误', detail: '密码参数异常！', life: 3000 })
       loading.value = false
       return
     }
     func(file, password).then((result) => {
       try {
         if (result.err !== "") {
-          MessagePlugin.error(result.err)
+          toast.add({ severity: 'error', summary: '错误', detail: result.err, life: 3000 })
         } else {
           handleResult(result)
         }
-      }finally {
+      } finally {
         loading.value = false
       }
     })
-  }else {
+  } else {
     func(file).then((result) => {
       try {
         if (result.err !== "") {
-          MessagePlugin.error(result.err)
+          toast.add({ severity: 'error', summary: '错误', detail: result.err, life: 3000 })
         } else {
           handleResult(result)
         }
-      }finally {
+      } finally {
         loading.value = false
       }
     })
   }
 }
 
-function handleResult(result){
+function handleResult(result) {
   columns.value = {}
   tabs.value = []
   tableData.value = {}
   let idx = 0
   for (let tab in result.data) {
-    if (idx === 0){
+    if (idx === 0) {
       activeTab.value = tab
       idx++
     }
@@ -191,10 +275,15 @@ function handleResult(result){
     tableData.value[tab] = result.data[tab]
     for (let key in inf) {
       columns.value[tab].push({
-        colKey: key, title: key,ellipsis: true, width:"15vw"
+        colKey: key, title: key, ellipsis: true, width: "15vw"
       })
     }
   }
+  
+  // 数据加载完成后重新计算表格高度
+  nextTick(() => {
+    calculateTableHeight()
+  })
 }
 
 const handleClear = () => {
@@ -204,46 +293,32 @@ const handleClear = () => {
   columns.value = {}
 }
 
-const handleTabChange = (value) => {
-  activeTab.value = value
+const handleTabChange = (event) => {
+  activeTab.value = tabs.value[event.index].value
 }
 
-const handleCellClick = (context) => {
+const handleCellClick = (value) => {
   // 复制单元格内容
-  ClipboardSetText(context.row[context.col.colKey]).then((ok)=>{
-    if (ok){
-      MessagePlugin.success('已复制到剪贴板',500)
+  ClipboardSetText(value).then((ok) => {
+    if (ok) {
+      toast.add({ severity: 'success', summary: '成功', detail: '已复制到剪贴板', life: 2000 })
     }
   })
 }
+
 const handleDrop = (event) => {
-  OnFileDrop((x,y,paths)=>{
+  OnFileDrop((x, y, paths) => {
     if (paths.length > 0) {
       form.value.file = paths[0]
+      toast.add({ severity: 'success', summary: '成功', detail: '文件已添加', life: 3000 })
     }
-  },false)
+  }, false)
 }
 
-const onDragSort = ({ currentIndex, targetIndex, current, target, data, newData, e, sort }) => {
-  console.log('交换行', currentIndex, targetIndex, current, target, data, newData, e, sort);
-  if (sort === 'col') {
-    columns.value[activeTab.value] = newData;
-  }
-};
+const onColumnReorder = (event) => {
+  columns.value[activeTab.value] = event.columns
+}
 </script>
 
 <style scoped>
-.empty{
-  margin-top:25vh
-}
-.form-card {
-  border-color: blue;
-  border-width: 3px;
-}
-.result-card {
-  flex: 1;
-  overflow-y: hidden;
-  border-color: blue;
-  border-width: 3px;
-}
 </style>

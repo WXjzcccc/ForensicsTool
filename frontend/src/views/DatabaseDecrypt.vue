@@ -1,46 +1,81 @@
 <template>
   <div class="page-container">
-    <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
-        <t-form-item label="选择任务" style="width: 100vw">
-          <t-select v-model="form.selected" placeholder="请选择任务">
-            <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
-          </t-select>
-        </t-form-item>
-        <div class="form-grid">
-          <div class="form-column">
-            <t-form-item label="文件/目录" class="form-item">
-              <t-input v-model="form.file" placeholder="请拖入文件或目录" @drop.prevent="handleDrop"
-                       @dragover.prevent/>
-            </t-form-item>
-          </div>
-          <div class="form-column">
-            <t-form-item label="密码"  class="form-item">
-              <t-input v-model="form.password" placeholder="解密密码"/>
-            </t-form-item>
-          </div>
-
+    <Card class="form-card">
+      <template #content>
+      <form class="form-layout">
+        <!-- 下拉选择框独占一行 -->
+        <div class="field full-width">
+          <FloatLabel class="field full-width" variant="over">
+              <label for="selected">选择任务</label>
+            <Select 
+              id="selected"
+              v-model="form.selected" 
+              :options="options" 
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="请选择任务"
+              v-tooltip.top="'选择要解密的数据库类型'"
+            />
+          </FloatLabel>
         </div>
-      </t-form>
-      <div style="height: 1vh"></div>
-      <t-space>
-        <t-button class="button" theme="primary" @click="handleDecrypt"><template #icon><t-icon name="lock-off"/></template>解密</t-button>
-        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
-      </t-space>
-    </t-card>
-    <div style="height: 1vh"></div>
-    <t-card class="result-card">
-      <t-empty v-if="resultText===''" class="empty"/>
-      <div class="result-container">
-        <div class="result-output" v-html="resultText"/>
+        
+        <!-- 文本输入框一行两个 -->
+        <div class="input-row">
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="file"
+                v-model="form.file" 
+                placeholder="请拖入文件或目录" 
+                @drop.prevent="handleDrop"
+                @dragover.prevent
+                v-tooltip.top="'拖入要解密的数据库文件路径'"
+              />
+              <label for="file">文件/目录</label>
+            </FloatLabel>
+          </div>
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="password"
+                v-model="form.password" 
+                placeholder="解密密码"
+                v-tooltip.top="'输入解密数据库所需的密码（某些数据库需要）'"
+              />
+              <label for="password">密码</label>
+            </FloatLabel>
+          </div>
+        </div>
+      </form>
+      
+      <!-- 按钮等分在同一行 -->
+      <div class="button-row">
+        <Button class="button equal-width" @click="handleDecrypt">
+          <i class="pi pi-lock-open"></i>
+          解密
+        </Button>
+        <Button class="button equal-width" severity="secondary" @click="handleClear">
+          <i class="pi pi-times"></i>
+          清空输出
+        </Button>
       </div>
-    </t-card>
-
+      </template>
+    </Card>
+    <Card class="result-card">
+      <template #content>
+      <div class="empty" v-if="resultText===''">
+        <Empty />
+      </div>
+        <div class="result-output" v-html="resultText"/>
+      </template>
+    </Card>
+    <Toast position="bottom-right"/>
   </div>
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import {
   DecryptAMapDB,
   DecryptDingTalkDB,
@@ -48,9 +83,13 @@ import {
   DecryptFTSIndexDB, DecryptNtqqDB, DecryptSQLCipher3DB, DecryptSQLCipher4DB, DecryptSystemDataSQLite, DecryptWCDB
 } from "../../wailsjs/go/database/DecryptDatabase.js";
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
-import {OnFileDrop} from "../../wailsjs/runtime/runtime.js";
-import {usePageDataStore} from "@/store/index.js";
-import {watch} from "vue";
+import { OnFileDrop, OnFileDropOff } from "../../wailsjs/runtime/runtime.js";
+import {usePageDataStore} from "@/store";
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
+import Empty from '@/components/Empty.vue'
+
+const toast = useToast()
 const store = usePageDataStore()
 const form = ref(store.databaseDecryptStore?.formData || {
   selected:"",
@@ -69,20 +108,34 @@ const options = ref([
   {label:"ntqq数据库解密",value:"8"},
   {label:"System.Data.SQLite库加密的数据库",value:"9"},
 ])
+
 watch([form,resultText],()=>{
   store.saveDatabaseDecryptData({
     formData:form.value,
     resultData:resultText.value
   })
 })
+
 const handleClear = () => {
   resultText.value = ""
+  toast.add({ severity: 'info', summary: '提示', detail: '已清空输出', life: 3000 })
 }
 
 const handleDecrypt = () => {
+  if (!form.value.selected) {
+    toast.add({ severity: 'warn', summary: '警告', detail: '请选择任务类型', life: 3000 })
+    return
+  }
+  
+  if (!form.value.file) {
+    toast.add({ severity: 'warn', summary: '警告', detail: '请选择文件或目录', life: 3000 })
+    return
+  }
+  
   var file = form.value.file;
   var password = form.value.password;
   var func
+  
   switch (form.value.selected) {
     case "1":{
       func = DecryptEnMicroMsg;
@@ -121,55 +174,56 @@ const handleDecrypt = () => {
       break;
     }
   }
+  
+  toast.add({ severity: 'info', summary: '提示', detail: '开始解密...', life: 3000 })
+  
   if (form.value.selected === "3") {
     func(file).then((result)=>{
       if (result.err !== "") {
         resultText.value += generateNormalTextOutput(result.err,"red")
+        toast.add({ severity: 'error', summary: '错误', detail: '解密失败', life: 3000 })
       }else{
         resultText.value += generateSuccessTextOutput("解密成功，解密后的数据库已保存至",result.save_path)
+        toast.add({ severity: 'success', summary: '成功', detail: '解密完成', life: 3000 })
       }
     })
   }else{
     func(file,password).then((result)=>{
       if (result.err !== "") {
         resultText.value += generateNormalTextOutput(result.err,"red")
+        toast.add({ severity: 'error', summary: '错误', detail: '解密失败', life: 3000 })
       }else{
         resultText.value += generateSuccessTextOutput("解密成功，解密后的数据库已保存至",result.save_path)
         if (form.value.selected === "1") {
           resultText.value += generateSuccessTextOutput("成功提取微信ID：",result.wxid)
         }
+        toast.add({ severity: 'success', summary: '成功', detail: '解密完成', life: 3000 })
       }
     })
   }
 }
 
 const handleDrop = (event) => {
-  OnFileDrop((x,y,paths)=>{
+  OnFileDrop((x, y, paths) => {
     if (paths.length > 0) {
       form.value.file = paths[0]
+      toast.add({ severity: 'success', summary: '成功', detail: '文件已添加', life: 3000 })
     }
-  },false)
+  }, false)
 }
+
 watch(resultText, () => {
   const card = document.querySelector('.result-card');
   if (card) {
     card.scrollTop = card.scrollHeight;
   }
 });
+
+// 组件卸载时清理文件拖放监听器
+onUnmounted(() => {
+  OnFileDropOff()
+})
 </script>
 
 <style scoped>
-.empty{
-  margin-top:25vh
-}
-.form-card {
-  border-color: blue;
-  border-width: 3px;
-}
-.result-card {
-  flex: 1;
-  overflow-y: hidden;
-  border-color: blue;
-  border-width: 3px;
-}
 </style>

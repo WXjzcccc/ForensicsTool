@@ -4,13 +4,13 @@ import (
 	"ForensicsTool/utils"
 	"context"
 	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 )
 
 type PasswdCalc struct {
@@ -41,30 +41,11 @@ func unpad(ciphertext []byte) ([]byte, error) {
 	return ciphertext[:length-int(padding)], nil
 }
 
-func decryptAES(token string, key, iv []byte) (string, error) {
-	ciphertext, err := base64.StdEncoding.DecodeString(token)
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	if len(ciphertext) < aes.BlockSize {
-		return "", errors.New("ciphertext too short")
-	}
-
-	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(ciphertext, ciphertext)
-
-	plaintext, err := unpad(ciphertext)
-	if err != nil {
-		return "", err
-	}
-
-	return string(plaintext), nil
+func decryptAES(token string, key, iv []byte) string {
+	return crypto.FromBase64String(token).
+		Aes().CBC().
+		WithKey(key).WithIv(iv).
+		Decrypt().ToString()
 }
 
 func (p *PasswdCalc) CalWechat(uin, imei string) string {
@@ -112,11 +93,11 @@ func (p *PasswdCalc) CalWildFire(token string) []string {
 	// 旧版本密钥
 	key2, _ := hex.DecodeString("7F7E7D7C7B7A79787766554433221100")
 	iv2 := key2
-	pwd, err := decryptAES(token, key, iv)
+	pwd := decryptAES(token, key, iv)
 	flag := "使用SQLCipher4进行解密"
-	if err != nil {
-		pwd, err = decryptAES(token, key2, iv2)
-		if err != nil {
+	if pwd == "" {
+		pwd = decryptAES(token, key2, iv2)
+		if pwd == "" {
 			return []string{"解密失败", ""}
 		}
 		flag = "使用SQLCipher3进行解密"

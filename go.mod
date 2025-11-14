@@ -9,6 +9,7 @@ require (
 	github.com/WXjzcccc/registry v0.1.3
 	github.com/beevik/etree v1.5.1
 	github.com/deatil/go-cryptobin v1.1.1005
+	github.com/donnie4w/go-logger v0.28.0
 	github.com/ghostiam/binstruct v1.4.0
 	github.com/iancoleman/orderedmap v0.3.0
 	github.com/tidwall/gjson v1.14.2
@@ -20,8 +21,10 @@ require (
 
 require (
 	github.com/bep/debounce v1.2.1 // indirect
+	github.com/donnie4w/gofer v0.1.8 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/google/btree v1.1.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jchv/go-winloader v0.0.0-20250406163304-c1995be93bd1 // indirect

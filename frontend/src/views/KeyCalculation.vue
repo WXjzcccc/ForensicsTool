@@ -1,71 +1,123 @@
 <template>
   <div class="page-container">
-    <t-card class="form-card">
-      <t-form layout="inline" label-width="calc(2em + 4vw)"  label-align="left">
-        <t-form-item label="选择任务" style="width: 100vw">
-          <t-select v-model="form.selected" placeholder="请选择任务">
-            <t-option v-for="item in options" :key="item.value" :value="item.value" :label="item.label"></t-option>
-          </t-select>
-        </t-form-item>
-        <div class="form-grid">
-        <div class="form-column">
-        <t-form-item label="微信uin" class="form-item">
-          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.uin">
-            <t-input v-model="form.uin" :placeholder="calPlace.uin"/>
-          </t-tooltip>
-        </t-form-item>
-
-        <t-form-item label="imei" class="form-item">
-          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.imei">
-            <t-input v-model="form.imei" :placeholder="calPlace.imei"/>
-          </t-tooltip>
-        </t-form-item>
-
-        <t-form-item label="wxid" class="form-item">
-          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.wxid">
-            <t-input v-model="form.wxid" :placeholder="calPlace.wxid"/>
-          </t-tooltip>
-        </t-form-item>
+    <Card class="form-card">
+      <template #content>
+      <form class="form-layout">
+        <!-- 下拉选择框独占一行 -->
+        <div class="field full-width">
+          <FloatLabel class="field full-width" variant="over">
+              <label for="task">选择任务</label>
+            <Select 
+              id="task"
+              v-model="form.selected" 
+              :options="options" 
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="请选择任务"
+              v-tooltip.top="'选择要计算的密钥类型'"
+            />
+          </FloatLabel>
         </div>
-        <div class="form-column">
-        <t-form-item label="token"  class="form-item">
-          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.token">
-            <t-input v-model="form.token" :placeholder="calPlace.token"/>
-          </t-tooltip>
-        </t-form-item>
-
-        <t-form-item label="uid" class="form-item">
-          <t-tooltip :overlay-style="{width:'35vw'}" :content="calPlace.uid">
-            <t-input v-model="form.uid" :placeholder="calPlace.uid"/>
-          </t-tooltip>
-        </t-form-item>
+        
+        <!-- 文本输入框一行两个 -->
+        <div class="input-row">
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="uin"
+                v-model="form.uin" 
+                :placeholder="calPlace.uin"
+                v-tooltip.top="calPlace.uin"
+              />
+              <label for="uin">微信uin</label>
+            </FloatLabel>
+          </div>
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="imei"
+                v-model="form.imei" 
+                :placeholder="calPlace.imei"
+                v-tooltip.top="calPlace.imei"
+              />
+              <label for="imei">imei</label>
+            </FloatLabel>
+          </div>
         </div>
+        
+        <div class="input-row">
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="wxid"
+                v-model="form.wxid" 
+                :placeholder="calPlace.wxid"
+                v-tooltip.top="calPlace.wxid"
+              />
+              <label for="wxid">wxid</label>
+            </FloatLabel>
+          </div>
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="token"
+                v-model="form.token" 
+                :placeholder="calPlace.token"
+                v-tooltip.top="calPlace.token"
+              />
+              <label for="token">token</label>
+            </FloatLabel>
+          </div>
         </div>
-      </t-form>
-      <div style="height: 1vh"></div>
-      <t-space>
-        <t-button class="button" theme="primary" @click="handleCalculate"><template #icon><t-icon name="calculator"/></template>计算</t-button>
-        <t-button class="button" theme="primary" @click="handleClear"><template #icon><t-icon name="clear-formatting"/></template>清空输出</t-button>
-      </t-space>
-    </t-card>
-    <div style="height: 1vh"></div>
-    <t-card class="result-card">
-      <t-empty v-if="resultText===''" class="empty"/>
-      <div class="result-container">
-        <div class="result-output" v-html="resultText"/>
+        
+        <div class="input-row">
+          <div class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                id="uid"
+                v-model="form.uid" 
+                :placeholder="calPlace.uid"
+                v-tooltip.top="calPlace.uid"
+              />
+              <label for="uid">uid</label>
+            </FloatLabel>
+          </div>
+        </div>
+      </form>
+      
+      <!-- 按钮等分在同一行 -->
+      <div class="button-row">
+        <Button class="button equal-width" @click="handleCalculate">
+          <i class="pi pi-calculator"></i>
+          计算
+        </Button>
+        <Button class="button equal-width" severity="secondary" @click="handleClear">
+          <i class="pi pi-trash"></i>
+          清空输出
+        </Button>
       </div>
-    </t-card>
-
+      </template>
+    </Card>
+    <Card class="result-card">
+      <template #content>
+      <div v-if="resultText === ''" class="empty">
+        <Empty />
+      </div>
+        <div class="result-output" v-html="resultText"/>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup>
 import {ref} from 'vue'
-import {MessagePlugin} from 'tdesign-vue-next'
 import {CalMostone, CalTiktok, CalWechat, CalWechatIndex, CalWildFire} from "../../wailsjs/go/passwdCalc/PasswdCalc.js";
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
-import {usePageDataStore} from "@/store/index.js";
+import {usePageDataStore} from "@/store";
 import {watch} from "vue";
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
+import Empty from '@/components/Empty.vue'
 const calPlace = {
   uin:"微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值",
   imei:"微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空",
@@ -157,19 +209,5 @@ watch(resultText, () => {
   }
 });
 </script>
-<!-- 如果只在style.css中定义，编译后不生效，暂时不知道原因 -->
 <style scoped>
-.empty{
-  margin-top:20vh
-}
-.form-card {
-  border-color: blue;
-  border-width: 3px;
-}
-.result-card {
-  flex: 1;
-  overflow-y: hidden;
-  border-color: blue;
-  border-width: 3px;
-}
 </style>
