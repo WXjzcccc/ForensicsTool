@@ -7,6 +7,7 @@ interface PageDataState {
   registryStore: any | null;
   bruteForceStore: any | null;
   timestampStore: any | null;
+  fileReaderStore: any | null;
 }
 
 export const usePageDataStore = defineStore('pageData', {
@@ -17,6 +18,7 @@ export const usePageDataStore = defineStore('pageData', {
     registryStore: null,
     bruteForceStore: null,
     timestampStore: null,
+    fileReaderStore: null,
   }),
   actions: {
     saveKeyCalculationData(data: any) {
@@ -36,6 +38,9 @@ export const usePageDataStore = defineStore('pageData', {
     },
     saveTimestampData(data: any) {
       this.timestampStore = data;
+    },
+    saveFileReaderData(data: any) {
+      this.fileReaderStore = data;
     },
     // 获取爆破状态
     getBruteForceCrackingState(): boolean {

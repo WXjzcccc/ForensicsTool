@@ -6,12 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
-	"github.com/tidwall/gjson"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"github.com/tidwall/gjson"
 )
 
 func randomKey(head []byte) []byte {
@@ -31,6 +33,7 @@ func randomKey(head []byte) []byte {
 	buf := new(bytes.Buffer)
 	err := binary.Write(buf, binary.BigEndian, ld)
 	if err != nil {
+		logger.Errorf("binary.Write failed: %v", err)
 		return nil
 	}
 	keyData := calMd5(buf.Bytes())

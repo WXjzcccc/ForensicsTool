@@ -2,9 +2,7 @@
   <div class="page-container">
     <Card class="form-card">
       <template #content>
-      <!-- 优化布局：下拉选择框独占一行，文本输入框独占一行，按钮等分排列 -->
       <form class="form-layout">
-        <!-- 第一行：下拉选择框 -->
         <div class="input-row">
           <div class="field full-width">
             <FloatLabel class="field full-width" variant="over">
@@ -35,13 +33,12 @@
               </FloatLabel>
           </div>
         </div>
-        
-        <!-- 第二行：文本输入框 -->
         <div class="field full-width">
           <FloatLabel variant="on">
             <InputText 
               id="timestamp"
               v-model="form.ts" 
+              aria-autocomplete="none"
               placeholder="请输入时间戳"
               v-tooltip.top="'输入要转换的时间戳，支持Unix时间戳'"
             />
@@ -49,7 +46,6 @@
           </FloatLabel>
         </div>
       </form>
-      <!-- 第三行：按钮组 -->
         <div class="button-row">
           <Button class="button equal-width" @click="handleTrans">
             <i class="pi pi-history"></i>

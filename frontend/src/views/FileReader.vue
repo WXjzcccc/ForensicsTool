@@ -17,6 +17,7 @@
             />
           </FloatLabel>
         </div>
+        
         <div class="input-row">
           <div class="field half-width">
             <FloatLabel variant="on">
@@ -111,12 +112,7 @@ import { useToast } from 'primevue/usetoast'
 import { usePageDataStore } from "@/store"
 import { watch } from "vue"
 import { ClipboardSetText, OnFileDrop, OnFileDropOff } from "../../wailsjs/runtime/runtime.js"
-import {
-  ExtractDbeaver,
-  ExtractFinalShell, ExtractHawk2, ExtractMetaMask,
-  ExtractMobaXterm,
-  ExtractNavicat, ExtractXShell
-} from "../../wailsjs/go/extractor/InfoExtractor.js"
+import { ReadLevelDB,ReadMMKV } from "../../wailsjs/go/reader/FileReader.js"
 import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import Tabs from 'primevue/tabs'
@@ -125,15 +121,15 @@ import { useTableHeight } from '@/composables/useTableHeight.js'
 
 const toast = useToast()
 const store = usePageDataStore()
-const form = ref(store.dataExtractionStore?.formData || {
+const form = ref(store.fileReaderStore?.formData || {
   selected: '',
   file: '',
   password: '',
 })
-const tableData = ref(store.dataExtractionStore?.tableData || {})
-const tabs = ref(store.dataExtractionStore?.tabsData || [])
-const activeTab = ref(store.dataExtractionStore?.tabData || '')
-const columns = ref(store.dataExtractionStore?.columnsData || {})
+const tableData = ref(store.fileReaderStore?.tableData || {})
+const tabs = ref(store.fileReaderStore?.tabsData || [])
+const activeTab = ref(store.fileReaderStore?.tabData || '')
+const columns = ref(store.fileReaderStore?.columnsData || {})
 
 // 动态计算DataTable的scrollHeight
 const tableScrollHeight = ref('60vh')
@@ -165,7 +161,7 @@ const getActiveTabIndex = computed(() => {
 })
 
 watch([form, tableData, tabs, activeTab], () => {
-  store.saveDataExtractionData({
+  store.saveFileReaderData({
     formData: form.value,
     tableData: tableData.value,
     tabsData: tabs.value,
@@ -175,13 +171,8 @@ watch([form, tableData, tabs, activeTab], () => {
 })
 
 const options = ref([
-  { label: "Navicat连接信息提取，指定文件为用户注册表文件NTUSER.DAT", value: "1" },
-  { label: "MobaXterm连接信息解密，指定文件为用户注册表文件NTUSER.DAT并给出主密码", value: "2" },
-  { label: "Dbeaver连接信息解密，指定文件为data-sources.json的父目录", value: "3" },
-  { label: "FinalShell连接信息解密，指定文件为conn文件夹", value: "4" },
-  { label: "XShell、XFtp连接信息解密，指定文件为session文件夹并给出密码（用户名+sid）", value: "5" },
-  { label: "Hawk2.xml数据解密，给出密码（crypto.KEY_128(256).xml中的base64值）", value: "6" },
-  { label: "MetaMask解析，指定文件为persis-root", value: "7" },
+  { label: "leveldb读取，指定文件夹为leveldb数据库文件夹", value: "1" },
+  { label: "mmkv读取，指定文件mmkv数据文件或mmkv目录，单文件时支持输入密码解密加密数据", value: "2" },
 ])
 
 const loading = ref(false)
@@ -198,36 +189,24 @@ const handleExtract = () => {
   }
   switch (form.value.selected) {
     case "1":
-      func = ExtractNavicat
-      break
+        func = ReadLevelDB
+        break
     case "2":
-      func = ExtractMobaXterm
-      break
-    case "3":
-      func = ExtractDbeaver
-      break
-    case "4":
-      func = ExtractFinalShell
-      break
-    case "5":
-      func = ExtractXShell
-      break
-    case "6":
-      func = ExtractHawk2
-      break
-    case "7":
-      func = ExtractMetaMask
-      break
+        func = ReadMMKV
+        break
   }
   if (form.value.selected === "2" ||
       form.value.selected === "5" ||
       form.value.selected === "6") {
     if (password === "" || password === undefined || password === null) {
+    if (form.value.selected !== "2"){
       toast.add({ severity: 'error', summary: '错误', detail: '密码参数异常！', life: 3000 })
       loading.value = false
       return
     }
+}
     func(file, password).then((result) => {
+        console.log(result)
       try {
         if (result.err !== "") {
           toast.add({ severity: 'error', summary: '错误', detail: result.err, life: 3000 })

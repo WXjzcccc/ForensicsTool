@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/donnie4w/go-logger/logger"
 	"github.com/ghostiam/binstruct"
 )
 
@@ -20,6 +21,7 @@ func GetMachineSid(binData []byte) string {
 	decoder := binstruct.NewDecoder(bytes.NewReader(binData), binary.LittleEndian)
 	err := decoder.Decode(&domainAccountV)
 	if err != nil {
+		logger.Error("解析DomainAccountV失败:", err)
 		return ""
 	}
 	return fmt.Sprintf("S-1-5-%v-%v-%v-%v", domainAccountV.DomainID, domainAccountV.SID1, domainAccountV.SID2, domainAccountV.SID3)

@@ -3,11 +3,13 @@ package tool
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
-	"github.com/tidwall/gjson"
 	"os"
 	"path/filepath"
+
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"github.com/tidwall/gjson"
 )
 
 const (
@@ -42,6 +44,7 @@ func AnalyzeDbeaver(folder string) (*orderedmap.OrderedMap, error) {
 		return nil, err
 	}
 	if !fileInfo.IsDir() {
+		logger.Errorf("%s is not a folder", folder)
 		return nil, fmt.Errorf("%s is not a folder", folder)
 	}
 	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
@@ -55,6 +58,7 @@ func AnalyzeDbeaver(folder string) (*orderedmap.OrderedMap, error) {
 		if filename == "credentials-config.json" {
 			encData, err := os.ReadFile(path)
 			if err != nil {
+				logger.Errorf("read %s failed: %v", path, err)
 				return err
 			}
 			decData := decryptDbeaver(encData)
@@ -63,6 +67,7 @@ func AnalyzeDbeaver(folder string) (*orderedmap.OrderedMap, error) {
 		if filename == "data-sources.json" {
 			conData, err := os.ReadFile(path)
 			if err != nil {
+				logger.Errorf("read %s failed: %v", path, err)
 				return err
 			}
 			conJson = gjson.Parse(string(conData))
@@ -73,6 +78,10 @@ func AnalyzeDbeaver(folder string) (*orderedmap.OrderedMap, error) {
 		return nil, err
 	}
 	children := conJson.Get("connections")
+	if !children.Exists() {
+		logger.Errorf("data-sources.json is empty")
+		return nil, fmt.Errorf("data-sources.json is empty")
+	}
 	children.ForEach(func(key, value gjson.Result) bool {
 		info := orderedmap.New()
 		info.SetEscapeHTML(false)

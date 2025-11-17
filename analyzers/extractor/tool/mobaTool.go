@@ -4,12 +4,14 @@ import (
 	"crypto/aes"
 	"crypto/sha512"
 	"fmt"
-	"github.com/WXjzcccc/registry"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"os"
 	"strings"
+
+	"github.com/WXjzcccc/registry"
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"golang.org/x/text/encoding/simplifiedchinese"
 )
 
 func decryptMoba(ciphertext, masterPasswd string) string {
@@ -27,12 +29,14 @@ func getEncFromIni(file string) ([]string, []string, error) {
 	*/
 	content, err := os.ReadFile(file)
 	if err != nil {
+		logger.Errorf("failed to read ini file: %v", err)
 		return nil, nil, fmt.Errorf("failed to read ini file: %v", err)
 	}
 
 	decoder := simplifiedchinese.GBK.NewDecoder()
 	utf8Content, err := decoder.Bytes(content)
 	if err != nil {
+		logger.Errorf("failed to convert encoding: %v", err)
 		return nil, nil, fmt.Errorf("failed to convert encoding: %v", err)
 	}
 
@@ -79,16 +83,19 @@ func getPwdOrCredential(reg *registry.Key, path string) ([]string, error) {
 	var data []string
 	nameKey, err := reg.OpenSubKey(path)
 	if err != nil {
+		logger.Errorf("未找到保存的凭据或是密码: %v", err)
 		return nil, fmt.Errorf("未找到保存的凭据或是密码: %v", err)
 	}
 	defer nameKey.Close()
 	names, err := nameKey.ReadValueNames(-1)
 	if err != nil {
+		logger.Errorf("failed to read registry key: %v", err)
 		return nil, fmt.Errorf("failed to read registry key: %v", err)
 	}
 	for _, name := range names {
 		value, _, err := nameKey.GetStringValue(name)
 		if err != nil {
+			logger.Errorf("failed to get string value: %v", err)
 			continue
 		}
 		data = append(data, fmt.Sprintf("%s=%s", name, value))
@@ -103,11 +110,13 @@ func getEncFromRegistry(file string) ([]string, []string, error) {
 	*/
 	reg, err := registry.Open(file)
 	if err != nil {
+		logger.Errorf("failed to open registry file: %v", err)
 		return nil, nil, fmt.Errorf("failed to open registry file: %v", err)
 	}
 	defer reg.Close()
 	rootKey, err := reg.OpenKey("Software\\Mobatek\\MobaXterm")
 	if err != nil {
+		logger.Errorf("failed to open registry key: %v", err)
 		return nil, nil, fmt.Errorf("failed to open registry key: %v", err)
 	}
 	defer rootKey.Close()
@@ -126,6 +135,7 @@ func AnalyzeMobaXterm(file, masterPasswd string) (*orderedmap.OrderedMap, error)
 		return nil, err
 	}
 	if fileInfo.IsDir() {
+		logger.Errorf("%s is not a file", file)
 		return nil, fmt.Errorf("%s is not a file", file)
 	}
 	result := orderedmap.New()
@@ -135,11 +145,13 @@ func AnalyzeMobaXterm(file, masterPasswd string) (*orderedmap.OrderedMap, error)
 	if strings.HasSuffix(file, ".ini") {
 		passwords, credentials, err = getEncFromIni(file)
 		if err != nil {
+			logger.Errorf("failed to get passwords from ini file: %v", err)
 			return nil, err
 		}
 	} else {
 		passwords, credentials, err = getEncFromRegistry(file)
 		if err != nil {
+			logger.Errorf("failed to get passwords from registry file: %v", err)
 			return nil, err
 		}
 	}

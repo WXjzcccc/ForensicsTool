@@ -3,7 +3,6 @@
     <Card class="form-card">
       <template #content>
       <form class="form-layout">
-        <!-- 下拉选择框独占一行 -->
         <div class="field full-width">
           <FloatLabel class="field full-width" variant="over">
               <label for="task">选择任务</label>
@@ -19,11 +18,11 @@
           </FloatLabel>
         </div>
         
-        <!-- 文本输入框一行两个 -->
         <div class="input-row">
           <div class="field half-width">
               <FloatLabel variant="on">
                   <InputText v-tooltip.top=brutePlace.target
+                    aria-autocomplete="none"
                     id="target"
                     v-model="form.target"
                     :placeholder="brutePlace.target"
@@ -36,6 +35,7 @@
             <label for="region">区号</label>
               <InputText 
                 v-tooltip.top=brutePlace.region
+                aria-autocomplete="none"
                 id="region"
                 v-model="form.region" 
                 :placeholder="brutePlace.region"
@@ -50,6 +50,7 @@
             <label for="mac">号段</label>
               <InputText 
                 v-tooltip.top=brutePlace.mac
+                aria-autocomplete="none"
                 id="mac"
                 v-model="form.mac" 
                 :placeholder="brutePlace.mac"
@@ -60,7 +61,8 @@
             <FloatLabel variant="on">
             <label for="length">长度</label>
               <InputText 
-               v-tooltip.top=brutePlace.length
+                v-tooltip.top=brutePlace.length
+                aria-autocomplete="none"
                 id="length"
                 v-model="form.length" 
                 :placeholder="brutePlace.length"
@@ -69,8 +71,6 @@
           </div>
         </div>
       </form>
-      
-      <!-- 按钮等分在同一行 -->
       <div class="button-row">
         <Button class="button equal-width" @click="handleBruteForce" :disabled="cracking">
           <i class="pi pi-cog"></i>

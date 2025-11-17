@@ -1,5 +1,7 @@
 package tool
 
+import "github.com/donnie4w/go-logger/logger"
+
 // JavaRandom 模拟Java的Random类
 type JavaRandom struct {
 	seed int64
@@ -20,6 +22,7 @@ func (r *JavaRandom) NextInt64() int64 {
 
 func (r *JavaRandom) NextInt(n int) int {
 	if n <= 0 {
+		logger.Errorf("n must be positive")
 		panic("n must be positive")
 	}
 

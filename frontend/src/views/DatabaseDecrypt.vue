@@ -3,7 +3,6 @@
     <Card class="form-card">
       <template #content>
       <form class="form-layout">
-        <!-- 下拉选择框独占一行 -->
         <div class="field full-width">
           <FloatLabel class="field full-width" variant="over">
               <label for="selected">选择任务</label>
@@ -18,15 +17,14 @@
             />
           </FloatLabel>
         </div>
-        
-        <!-- 文本输入框一行两个 -->
         <div class="input-row">
           <div class="field half-width">
             <FloatLabel variant="on">
               <InputText 
                 id="file"
                 v-model="form.file" 
-                placeholder="请拖入文件或目录" 
+                placeholder="请拖入文件或目录"
+                aria-autocomplete="none"
                 @drop.prevent="handleDrop"
                 @dragover.prevent
                 v-tooltip.top="'拖入要解密的数据库文件路径'"
@@ -39,6 +37,7 @@
               <InputText 
                 id="password"
                 v-model="form.password" 
+                aria-autocomplete="none"
                 placeholder="解密密码"
                 v-tooltip.top="'输入解密数据库所需的密码（某些数据库需要）'"
               />
@@ -47,15 +46,13 @@
           </div>
         </div>
       </form>
-      
-      <!-- 按钮等分在同一行 -->
       <div class="button-row">
         <Button class="button equal-width" @click="handleDecrypt">
           <i class="pi pi-lock-open"></i>
           解密
         </Button>
         <Button class="button equal-width" severity="secondary" @click="handleClear">
-          <i class="pi pi-times"></i>
+          <i class="pi pi-trash"></i>
           清空输出
         </Button>
       </div>

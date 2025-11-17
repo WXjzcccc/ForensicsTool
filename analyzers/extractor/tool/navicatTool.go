@@ -4,12 +4,14 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"github.com/WXjzcccc/registry"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
-	"golang.org/x/crypto/blowfish"
 	"os"
 	"unicode/utf8"
+
+	"github.com/WXjzcccc/registry"
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"golang.org/x/crypto/blowfish"
 )
 
 const (
@@ -125,12 +127,14 @@ func decryptNavicat(pwd string) string {
 	// 再尝试 Navicat 11 解密
 	dec11, err := NewNavicat11Cipher("")
 	if err != nil {
+		logger.Errorf("failed to create navicat 11 cipher: %v", err)
 		return ""
 	}
 	result, err = dec11.DecryptString(pwd)
 	if err == nil {
 		return result
 	}
+	logger.Errorf("failed to decrypt navicat 11 password: %v", err)
 	return ""
 }
 
@@ -148,12 +152,14 @@ func getNavicatConnections(reg *registry.Registry) (map[string]*registry.Key, er
 
 	rootKey, err := reg.OpenKey("Software\\PremiumSoft")
 	if err != nil {
-		return nil, err
+		logger.Errorf("failed to open registry key: %v", err)
+		return nil, fmt.Errorf("failed to open registry key: %v", err)
 	}
 
 	subkeyNames, err := rootKey.ReadSubKeyNames(-1)
 	if err != nil {
-		return nil, err
+		logger.Errorf("failed to read subkey names: %v", err)
+		return nil, fmt.Errorf("failed to read subkey names: %v", err)
 	}
 
 	connections := make(map[string]*registry.Key)
@@ -185,7 +191,8 @@ func getNormalDBInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMa
 	info := make(map[string]*orderedmap.OrderedMap)
 	connections, err := serverKeys.ReadSubKeyNames(-1)
 	if err != nil {
-		return nil, fmt.Errorf("读取注册表失败：%v", err)
+		logger.Errorf("failed to read subkey names: %v", err)
+		return nil, fmt.Errorf("failed to read subkey names: %v", err)
 	}
 
 	for _, connection := range connections {
@@ -194,6 +201,7 @@ func getNormalDBInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMa
 		basicInfo.Set("连接名", connection)
 		key, err := serverKeys.OpenSubKey(connection)
 		if err != nil {
+			logger.Errorf("failed to open subkey: %v", err)
 			continue
 		}
 		if host, _, err := key.GetStringValue("Host"); err == nil {
@@ -222,7 +230,8 @@ func getMSSQLInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMap, 
 	info := make(map[string]*orderedmap.OrderedMap)
 	connections, err := serverKeys.ReadSubKeyNames(-1)
 	if err != nil {
-		return nil, fmt.Errorf("读取注册表失败：%v", err)
+		logger.Errorf("failed to read subkey names: %v", err)
+		return nil, fmt.Errorf("failed to read subkey names: %v", err)
 	}
 
 	for _, connection := range connections {
@@ -231,6 +240,7 @@ func getMSSQLInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMap, 
 		basicInfo.Set("连接名", connection)
 		key, err := serverKeys.OpenSubKey(connection)
 		if err != nil {
+			logger.Errorf("failed to open subkey: %v", err)
 			continue
 		}
 		if host, _, err := key.GetStringValue("Host"); err == nil {
@@ -264,7 +274,8 @@ func getSQLiteInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMap,
 	info := make(map[string]*orderedmap.OrderedMap)
 	connections, err := serverKeys.ReadSubKeyNames(-1)
 	if err != nil {
-		return nil, fmt.Errorf("读取注册表失败：%v", err)
+		logger.Errorf("failed to read subkey names: %v", err)
+		return nil, fmt.Errorf("failed to read subkey names: %v", err)
 	}
 
 	for _, connection := range connections {
@@ -273,6 +284,7 @@ func getSQLiteInfo(serverKeys *registry.Key) (map[string]*orderedmap.OrderedMap,
 		basicInfo.Set("连接名", connection)
 		key, err := serverKeys.OpenSubKey(connection)
 		if err != nil {
+			logger.Errorf("failed to open subkey: %v", err)
 			continue
 		}
 		if name, _, err := key.GetStringValue("DatabaseFileName"); err == nil {
@@ -319,6 +331,7 @@ func addRecords(result *orderedmap.OrderedMap, tType, tName string, connections 
 		}
 		info, err := infoFunc(keys)
 		if err != nil {
+			logger.Errorf("failed to get %s info: %v", tName, err)
 			return err
 		}
 		var records []*orderedmap.OrderedMap
@@ -340,13 +353,16 @@ func AnalyzeNavicat(regPath string) (*orderedmap.OrderedMap, error) {
 	*/
 	fileInfo, err := os.Stat(regPath)
 	if err != nil {
+		logger.Errorf("failed to stat file: %v", err)
 		return nil, err
 	}
 	if fileInfo.IsDir() {
+		logger.Errorf("%s is not a file", regPath)
 		return nil, fmt.Errorf("%s is not a file", regPath)
 	}
 	reg, err := registry.Open(regPath)
 	if err != nil {
+		logger.Errorf("failed to open registry file: %v", err)
 		return nil, err
 	}
 	defer reg.Close()

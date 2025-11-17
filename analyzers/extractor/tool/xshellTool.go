@@ -7,12 +7,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
-	"gopkg.in/ini.v1"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"gopkg.in/ini.v1"
 )
 
 func decryptXShellStr(sid, encPwd string) (string, error) {
@@ -24,9 +26,11 @@ func decryptXShellStr(sid, encPwd string) (string, error) {
 	*/
 	decoded, err := base64.StdEncoding.DecodeString(encPwd)
 	if err != nil {
+		logger.Errorf("failed to decode base64 string: %v", err)
 		return "", err
 	}
 	if len(decoded) < 32 {
+		logger.Errorf("invalid encrypted password length: %d", len(decoded))
 		return "", errors.New("invalid encrypted password length")
 	}
 	data := decoded[:len(decoded)-32]
@@ -48,6 +52,7 @@ func decryptXShellStr(sid, encPwd string) (string, error) {
 	hasher.Write(decrypted)
 	calculatedChecksum := hasher.Sum(nil)
 	if hex.EncodeToString(calculatedChecksum) != hex.EncodeToString(checksum) {
+		logger.Errorf("checksum verification failed: expected %s, got %s", hex.EncodeToString(checksum), hex.EncodeToString(calculatedChecksum))
 		return "", errors.New("checksum verification failed")
 	}
 
@@ -72,10 +77,12 @@ func decryptXShellStrNew(sid string, encPwd string) (string, error) {
 	*/
 	decoded, err := base64.StdEncoding.DecodeString(encPwd)
 	if err != nil {
+		logger.Errorf("failed to decode base64 string: %v", err)
 		return "", err
 	}
 
 	if len(decoded) < 32 {
+		logger.Errorf("invalid encrypted password length: %d", len(decoded))
 		return "", errors.New("invalid encrypted password length")
 	}
 
@@ -85,6 +92,7 @@ func decryptXShellStrNew(sid string, encPwd string) (string, error) {
 	// 处理 SID
 	index := strings.Index(sid, "S-1-5")
 	if index == -1 {
+		logger.Errorf("invalid SID format: %s", sid)
 		return "", errors.New("invalid SID format")
 	}
 
@@ -109,6 +117,7 @@ func decryptXShellStrNew(sid string, encPwd string) (string, error) {
 	calculatedChecksum := hasher.Sum(nil)
 
 	if hex.EncodeToString(calculatedChecksum) != hex.EncodeToString(checksum) {
+		logger.Errorf("checksum verification failed: expected %s, got %s", hex.EncodeToString(checksum), hex.EncodeToString(calculatedChecksum))
 		return "", errors.New("checksum verification failed")
 	}
 
@@ -119,6 +128,7 @@ func decryptXShellStrNew(sid string, encPwd string) (string, error) {
 func preDeal(file string) (string, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
+		logger.Errorf("failed to read file: %v", err)
 		return "", err
 	}
 
@@ -130,6 +140,7 @@ func preDeal(file string) (string, error) {
 	dealFile := file + ".deal"
 	err = os.WriteFile(dealFile, data, 0644)
 	if err != nil {
+		logger.Errorf("failed to write file: %v", err)
 		return "", err
 	}
 
@@ -154,13 +165,16 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 	var xft []*orderedmap.OrderedMap
 	fileInfo, err := os.Stat(folder)
 	if err != nil {
+		logger.Errorf("failed to stat folder: %v", err)
 		return nil, err
 	}
 	if !fileInfo.IsDir() {
+		logger.Errorf("%s is not a folder", folder)
 		return nil, fmt.Errorf("%s is not a folder", folder)
 	}
 	err = filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			logger.Errorf("failed to walk file: %v", err)
 			return err
 		}
 
@@ -173,6 +187,7 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 			originFile := path
 			dealFile, err := preDeal(originFile)
 			if err != nil {
+				logger.Errorf("failed to preDeal file: %v", err)
 				return err
 			}
 			defer delDeal(dealFile)
@@ -181,6 +196,7 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 				AllowBooleanKeys: true,
 			}, dealFile)
 			if err != nil {
+				logger.Errorf("failed to load ini file: %v", err)
 				return err
 			}
 
@@ -214,6 +230,7 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 			originFile := path
 			dealFile, err := preDeal(originFile)
 			if err != nil {
+				logger.Errorf("failed to preDeal file: %v", err)
 				return err
 			}
 			defer delDeal(dealFile)
@@ -222,6 +239,7 @@ func AnalyzeXshell(folder string, sid string) (*orderedmap.OrderedMap, error) {
 				AllowBooleanKeys: true,
 			}, dealFile)
 			if err != nil {
+				logger.Errorf("failed to load ini file: %v", err)
 				return err
 			}
 

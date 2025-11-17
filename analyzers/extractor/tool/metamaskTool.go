@@ -3,11 +3,13 @@ package tool
 import (
 	"ForensicsTool/utils"
 	"fmt"
-	"github.com/iancoleman/orderedmap"
-	"github.com/tidwall/gjson"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
+	"github.com/tidwall/gjson"
 )
 
 func AnalyzeMetaMask(filePath string) (*orderedmap.OrderedMap, error) {
@@ -20,6 +22,7 @@ func AnalyzeMetaMask(filePath string) (*orderedmap.OrderedMap, error) {
 		return nil, err
 	}
 	if fileInfo.IsDir() {
+		logger.Errorf("%s is not a file", filePath)
 		return nil, fmt.Errorf("%s is not a file", filePath)
 	}
 	result := orderedmap.New()

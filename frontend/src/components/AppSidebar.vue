@@ -21,19 +21,21 @@
             </template>
             
             <template #end>
-                <div v-if="!isCollapsed" class="sidebar-footer" style="--wails-draggable: no-drag;">
-                    <span class="version-text">{{ version }}</span>
+                <div class="sidebar-footer" style="--wails-draggable: no-drag;">
                     <Button 
+                        v-if="!isCollapsed"
                         @click="drawerVisible = true" 
-                        class="tips-button"
-                        icon="pi pi-question-circle"
                         text
-                    />      
+                    >  {{ version }}    </Button>
+                    <Button v-else
+                        @click="drawerVisible = true" 
+                        icon="pi pi-info-circle"
+                        text/>
                 </div>
             </template>
         </Menu>
     </div>
-    <Drawer v-model:visible="drawerVisible" header="小Tips" position="right">
+    <Drawer v-model:visible="drawerVisible" header="小Tips" position="right" class="sidebar-tips">
         <Message size="small">1.小红书，密码为xhsdev，选择sqlcipher3直接解密</Message>
         <Message size="small">2.微信的imei，现在可以通过files/KeyInfo.bin获取了，需要解密文件，算法为RC4，密钥为_wEcHAT_</Message>
         <Message size="small">3.MosGram(泡泡)，密码为cust_id的md5值，在sp目录的account_config.xml文件中，使用SQLCipher4参数解</Message>
@@ -94,12 +96,12 @@ const menuItems = ref([
         command: () => navigateTo('/TimestampParser'),
         name: 'TimestampParser'
     },
-    // {
-    //     label: '面板取证',
-    //     icon: 'pi pi-server',
-    //     command: () => navigateTo('/TimestampParser'),
-    //     name: 'TimestampParser'
-    // },
+    {
+        label: '文件读取',
+        icon: 'pi pi-file-arrow-up',
+        command: () => navigateTo('/FileReader'),
+        name: 'FileReader'
+    },
     {
         label: '关于',
         icon: 'pi pi-info-circle',
@@ -207,7 +209,9 @@ onUnmounted(() => {
 }
 
 .sidebar-footer {
-    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     border-top: 1px solid var(--p-surface-200);
 }
@@ -218,11 +222,11 @@ onUnmounted(() => {
 
 .version-text {
     font-size: 0.75rem;
-    color: var(--p-surface-600);
+    color: var(--p-primary-600);
 }
 
 .p-dark .version-text {
-    color: var(--p-surface-400);
+    color: var(--p-primary-400);
 }
 
 .menu-link {
@@ -262,6 +266,10 @@ onUnmounted(() => {
 .p-dark .menu-link.active {
     background-color: color-mix(in srgb, var(--p-primary-400), transparent 80%);
     color: var(--p-primary-300);
+}
+
+.p-message {
+    margin-top: .5rem;
 }
 
 /* 收起状态下的样式调整 */

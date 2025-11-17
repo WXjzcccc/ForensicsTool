@@ -7,13 +7,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/WXjzcccc/registry"
-	"github.com/iancoleman/orderedmap"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/WXjzcccc/registry"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
 )
 
 type WinReg struct {
@@ -43,6 +44,7 @@ func checkSubKeyExist(key registry.Key, keyName string) bool {
 	*/
 	names, err := key.ReadSubKeyNames(-1)
 	if err != nil {
+		logger.Error("读取子键名称失败:", err)
 		return false
 	}
 	for _, name := range names {
@@ -56,6 +58,7 @@ func checkSubKeyExist(key registry.Key, keyName string) bool {
 func getStringValue(key registry.Key, valueName string) string {
 	result, _, err := key.GetStringValue(valueName)
 	if err != nil {
+		logger.Error("获取字符串值失败:", err)
 		return ""
 	}
 	return result
@@ -63,7 +66,8 @@ func getStringValue(key registry.Key, valueName string) string {
 
 func getStringsValue(key registry.Key, valueName string) []string {
 	result, _, err := key.GetStringsValue(valueName)
-	if err != nil {
+	if err != nil || len(result) == 0 {
+		logger.Errorf("获取字符串数组值<%s>失败:%v", valueName, err)
 		return []string{""}
 	}
 	return result
@@ -72,6 +76,7 @@ func getStringsValue(key registry.Key, valueName string) []string {
 func getBinaryValue(key registry.Key, valueName string) []byte {
 	result, _, err := key.GetBinaryValue(valueName)
 	if err != nil {
+		logger.Error("获取二进制值失败:", err)
 		return nil
 	}
 	return result
@@ -80,6 +85,7 @@ func getBinaryValue(key registry.Key, valueName string) []byte {
 func getIntValue(key registry.Key, valueName string) uint64 {
 	result, _, err := key.GetIntegerValue(valueName)
 	if err != nil {
+		logger.Error("获取整数值失败:", err)
 		return 0
 	}
 	return result
@@ -116,6 +122,7 @@ func byte2mac(macBytes []byte) string {
 func (w *WinReg) getBootKey() []byte {
 	key, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\LSA", w.getControlSet()))
 	if err != nil {
+		logger.Error("打开LSA注册表键失败:", err)
 		return nil
 	}
 	defer key.Close()
@@ -123,34 +130,42 @@ func (w *WinReg) getBootKey() []byte {
 	jd, err := key.OpenSubKey("JD")
 
 	if err != nil {
+		logger.Error("打开JD子键失败:", err)
 		return nil
 	}
 	skew, err := key.OpenSubKey("Skew1")
 	if err != nil {
+		logger.Error("打开Skew1子键失败:", err)
 		return nil
 	}
 	gbg, err := key.OpenSubKey("GBG")
 	if err != nil {
+		logger.Error("打开GBG子键失败:", err)
 		return nil
 	}
 	data, err := key.OpenSubKey("Data")
 	if err != nil {
+		logger.Error("打开Data子键失败:", err)
 		return nil
 	}
 	jdClassName, err := hex.DecodeString(jd.GetClassName())
 	if err != nil {
+		logger.Error("解码JD类名失败:", err)
 		return nil
 	}
 	skewClassName, err := hex.DecodeString(skew.GetClassName())
 	if err != nil {
+		logger.Error("解码Skew1类名失败:", err)
 		return nil
 	}
 	gbgClassName, err := hex.DecodeString(gbg.GetClassName())
 	if err != nil {
+		logger.Error("解码GBG类名失败:", err)
 		return nil
 	}
 	dataClassName, err := hex.DecodeString(data.GetClassName())
 	if err != nil {
+		logger.Error("解码Data类名失败:", err)
 		return nil
 	}
 	bootKeyObf = append(bootKeyObf, jdClassName...)
@@ -168,6 +183,7 @@ func (w *WinReg) getBootKey() []byte {
 func (w *WinReg) getControlSet() string {
 	key, err := w.systemReg.OpenKey("select")
 	if err != nil {
+		logger.Error("打开select注册表键失败:", err)
 		return "ControlSet001"
 	}
 	defer key.Close()
@@ -178,6 +194,7 @@ func (w *WinReg) getControlSet() string {
 func (w *WinReg) getTimeZone() string {
 	key, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\TimeZoneInformation", w.getControlSet()))
 	if err != nil {
+		logger.Error("打开TimeZoneInformation注册表键失败:", err)
 		return ""
 	}
 	defer key.Close()
@@ -187,6 +204,7 @@ func (w *WinReg) getTimeZone() string {
 	}
 	tKey, err := w.softwareReg.OpenKey(fmt.Sprintf("Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\%s", timeZoneName))
 	if err != nil {
+		logger.Error("打开时区注册表键失败:", err)
 		return ""
 	}
 	defer tKey.Close()
@@ -197,6 +215,7 @@ func (w *WinReg) getTimeZone() string {
 func (w *WinReg) getComputerName() string {
 	systemKey, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\ComputerName\\ComputerName", w.getControlSet()))
 	if err != nil {
+		logger.Error("打开ComputerName注册表键失败:", err)
 		return ""
 	}
 	defer systemKey.Close()
@@ -206,6 +225,7 @@ func (w *WinReg) getComputerName() string {
 func (w *WinReg) getLastShutdownTime() string {
 	systemKey, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\Windows", w.getControlSet()))
 	if err != nil {
+		logger.Error("打开Windows注册表键失败:", err)
 		return ""
 	}
 	defer systemKey.Close()
@@ -216,6 +236,7 @@ func (w *WinReg) getLastShutdownTime() string {
 func (w *WinReg) getLastLoginUser() string {
 	softwareKey, err := w.softwareReg.OpenKey("Microsoft\\Windows\\CurrentVersion\\Authentication\\LogonUI")
 	if err != nil {
+		logger.Error("打开LogonUI注册表键失败:", err)
 		return ""
 	}
 	defer softwareKey.Close()
@@ -237,6 +258,7 @@ func (w *WinReg) getSystemInfo() ([]*orderedmap.OrderedMap, error) {
 	var result []*orderedmap.OrderedMap
 	softwareKey, err := w.softwareReg.OpenKey("Microsoft\\Windows NT\\CurrentVersion")
 	if err != nil {
+		logger.Error("打开CurrentVersion注册表键失败:", err)
 		return nil, err
 	}
 	defer softwareKey.Close()
@@ -256,6 +278,7 @@ func (w *WinReg) getSystemInfo() ([]*orderedmap.OrderedMap, error) {
 	if checkSubKeyExist(softwareKey, "SoftwareProtectionPlatform") {
 		productKey, err := softwareKey.OpenSubKey("SoftwareProtectionPlatform")
 		if err != nil {
+			logger.Error("打开SoftwareProtectionPlatform子键失败:", err)
 			return result, err
 		}
 		result = append(result, w.getOrderMap("产品密钥备份(非当前密钥)", getStringValue(productKey, "BackupProductKeyDefault")))
@@ -271,11 +294,13 @@ func (w *WinReg) getNetInfo() ([]*orderedmap.OrderedMap, error) {
 	var result []*orderedmap.OrderedMap
 	interfaceKey, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Services\\Tcpip\\Parameters\\Interfaces", w.getControlSet()))
 	if err != nil {
+		logger.Error("打开Interfaces注册表键失败:", err)
 		return nil, err
 	}
 	defer interfaceKey.Close()
 	interfaceSubKeyNames, err := interfaceKey.ReadSubKeyNames(-1)
 	if err != nil {
+		logger.Error("读取接口子键名称失败:", err)
 		return nil, err
 	}
 	for _, interfaceSubKeyName := range interfaceSubKeyNames {
@@ -283,6 +308,7 @@ func (w *WinReg) getNetInfo() ([]*orderedmap.OrderedMap, error) {
 		info.SetEscapeHTML(false)
 		deviceKey, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\connection", w.getControlSet(), strings.ToUpper(interfaceSubKeyName)))
 		if err != nil {
+			logger.Error("打开网络设备注册表键失败:", err)
 			info.Set("名称", "")
 		} else {
 			info.Set("名称", getStringValue(deviceKey, "Name"))
@@ -290,6 +316,7 @@ func (w *WinReg) getNetInfo() ([]*orderedmap.OrderedMap, error) {
 		defer deviceKey.Close()
 		macKey, err := w.systemReg.OpenKey(fmt.Sprintf("%s\\Control\\NetworkSetup2\\Interfaces\\%s\\Kernel", w.getControlSet(), strings.ToUpper(interfaceSubKeyName)))
 		if err != nil {
+			logger.Error("打开MAC地址注册表键失败:", err)
 			info.Set("当前MAC地址", "")
 			info.Set("物理MAC地址", "")
 		} else {
@@ -299,6 +326,7 @@ func (w *WinReg) getNetInfo() ([]*orderedmap.OrderedMap, error) {
 		defer macKey.Close()
 		interfaceSubKey, err := interfaceKey.OpenSubKey(interfaceSubKeyName)
 		if err != nil {
+			logger.Error("打开接口子键失败:", err)
 			return nil, err
 		}
 		info.Set("DHCP网络地址", getStringValue(interfaceSubKey, "DhcpIPAddress"))
@@ -321,6 +349,7 @@ func (w *WinReg) getUserInfo() ([]*orderedmap.OrderedMap, error) {
 	var result []*orderedmap.OrderedMap
 	domainAccountKey, err := w.samReg.OpenKey("SAM\\Domains\\Account")
 	if err != nil {
+		logger.Error("打开SAM Domains Account注册表键失败:", err)
 		return nil, err
 	}
 	defer domainAccountKey.Close()
@@ -331,16 +360,19 @@ func (w *WinReg) getUserInfo() ([]*orderedmap.OrderedMap, error) {
 	machineSid := structs.GetMachineSid(domainAccountVData)
 	userAccountKey, err := domainAccountKey.OpenSubKey("Users")
 	if err != nil {
+		logger.Error("打开Users子键失败:", err)
 		return nil, err
 	}
 	defer userAccountKey.Close()
 	userNameKey, err := userAccountKey.OpenSubKey("Names")
 	if err != nil {
+		logger.Error("打开Names子键失败:", err)
 		return nil, err
 	}
 	defer userNameKey.Close()
 	userNames, err := userNameKey.ReadSubKeyNames(-1)
 	if err != nil {
+		logger.Error("读取用户名失败:", err)
 		return nil, err
 	}
 	for _, userName := range userNames {
@@ -348,17 +380,20 @@ func (w *WinReg) getUserInfo() ([]*orderedmap.OrderedMap, error) {
 		info.SetEscapeHTML(false)
 		userKey, err := userNameKey.OpenSubKey(userName)
 		if err != nil {
+			logger.Error("打开用户子键失败:", err)
 			continue
 		}
 		defer userKey.Close()
 		_, valType, err := userKey.GetValue("(default)", []byte{})
 		if err != nil {
+			logger.Error("获取用户默认值失败:", err)
 			continue
 		}
 		userSid := fmt.Sprintf("%s-%v", machineSid, valType)
 		rid := fmt.Sprintf("%08x", valType)
 		accountKey, err := userAccountKey.OpenSubKey(rid)
 		if err != nil {
+			logger.Error("打开用户账户子键失败:", err)
 			continue
 		}
 		accountKey.Close()
@@ -392,6 +427,7 @@ func (w *WinReg) getDefaultBrowser() ([]*orderedmap.OrderedMap, error) {
 		info.SetEscapeHTML(false)
 		rootKey, err := nt.OpenKey("SOFTWARE\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice")
 		if err != nil {
+			logger.Error("打开默认浏览器注册表键失败:", err)
 			return nil, err
 		}
 		defer rootKey.Close()
@@ -419,6 +455,7 @@ func (r *Reg) AnalyzeWinReg(folder string) *RegResult {
 	var ntRegList []registry.Registry
 	fileInfo, err := os.Stat(folder)
 	if err != nil {
+		logger.Error("检查文件夹状态失败:", err)
 		return &RegResult{nil, err.Error()}
 	}
 	if !fileInfo.IsDir() {
@@ -432,17 +469,20 @@ func (r *Reg) AnalyzeWinReg(folder string) *RegResult {
 		case "SOFTWARE":
 			softwareReg, err = registry.Open(path)
 			if err != nil {
+				logger.Error("打开SOFTWARE注册表文件失败:", err)
 				return err
 			}
 		case "SAM":
 			samReg, err = registry.Open(path)
 			if err != nil {
+				logger.Error("打开SAM注册表文件失败:", err)
 				return err
 			}
 		}
 		if strings.HasSuffix(filename, ".DAT") {
 			ntReg, err := registry.Open(path)
 			if err != nil {
+				logger.Error("打开NTUSER.DAT注册表文件失败:", err)
 				return err
 			}
 			ntRegList = append(ntRegList, ntReg)
@@ -450,30 +490,31 @@ func (r *Reg) AnalyzeWinReg(folder string) *RegResult {
 		return nil
 	})
 	if err != nil {
+		logger.Error("遍历文件夹失败:", err)
 		return &RegResult{nil, err.Error()}
 	}
 	winReg := &WinReg{systemReg, samReg, softwareReg, ntRegList}
 	sysInfo, err := winReg.getSystemInfo()
 	if err != nil {
-		log.Println(err)
+		logger.Error("获取系统信息失败:", err)
 	} else {
 		result.Set("系统信息", sysInfo)
 	}
 	netInfo, err := winReg.getNetInfo()
 	if err != nil {
-		log.Println(err)
+		logger.Error("获取网卡信息失败:", err)
 	} else {
 		result.Set("网卡信息", netInfo)
 	}
 	userInfo, err := winReg.getUserInfo()
 	if err != nil {
-		log.Println(err)
+		logger.Error("获取用户信息失败:", err)
 	} else {
 		result.Set("用户信息", userInfo)
 	}
 	defaultBrowser, err := winReg.getDefaultBrowser()
 	if err != nil {
-		log.Println(err)
+		logger.Error("获取默认浏览器信息失败:", err)
 	} else {
 		result.Set("默认浏览器", defaultBrowser)
 	}

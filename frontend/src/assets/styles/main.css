@@ -852,6 +852,15 @@ html, body {
     background-color: color-mix(in srgb, var(--p-primary-400), transparent 85%);
 }
 
+.p-datatable-tbody > tr > td {
+    /* text-overflow: ellipsis !important; */
+    max-width: 20vw;
+    overflow: scroll !important;
+    /* white-space: nowrap !important; */
+    word-wrap: break-word !important;
+}
+
+
 /* Tabs组件样式 */
 .p-tabs .p-tabs-nav li .p-tabs-nav-link {
     transition: box-shadow 0.3s;
@@ -969,6 +978,10 @@ html, body {
     color: var(--p-primary-500);
     background-color: rgba(red, green, blue, 1);
 }
+
+/* .p-floatlabel-on:has(input[placeholder]) label {
+    background-color: transparent !important;
+} */
 
 .p-dark .p-floatlabel-on {
     color: var(--p-surface-400);

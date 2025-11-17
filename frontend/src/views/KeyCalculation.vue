@@ -3,7 +3,6 @@
     <Card class="form-card">
       <template #content>
       <form class="form-layout">
-        <!-- 下拉选择框独占一行 -->
         <div class="field full-width">
           <FloatLabel class="field full-width" variant="over">
               <label for="task">选择任务</label>
@@ -19,13 +18,13 @@
           </FloatLabel>
         </div>
         
-        <!-- 文本输入框一行两个 -->
         <div class="input-row">
           <div class="field half-width">
             <FloatLabel variant="on">
               <InputText 
                 id="uin"
                 v-model="form.uin" 
+                aria-autocomplete="none"
                 :placeholder="calPlace.uin"
                 v-tooltip.top="calPlace.uin"
               />
@@ -36,7 +35,8 @@
             <FloatLabel variant="on">
               <InputText 
                 id="imei"
-                v-model="form.imei" 
+                v-model="form.imei"
+                aria-autocomplete="none"
                 :placeholder="calPlace.imei"
                 v-tooltip.top="calPlace.imei"
               />
@@ -50,7 +50,8 @@
             <FloatLabel variant="on">
               <InputText 
                 id="wxid"
-                v-model="form.wxid" 
+                v-model="form.wxid"
+                aria-autocomplete="none"
                 :placeholder="calPlace.wxid"
                 v-tooltip.top="calPlace.wxid"
               />
@@ -61,7 +62,8 @@
             <FloatLabel variant="on">
               <InputText 
                 id="token"
-                v-model="form.token" 
+                v-model="form.token"
+                aria-autocomplete="none"
                 :placeholder="calPlace.token"
                 v-tooltip.top="calPlace.token"
               />
@@ -76,6 +78,7 @@
               <InputText 
                 id="uid"
                 v-model="form.uid" 
+                aria-autocomplete="none"
                 :placeholder="calPlace.uid"
                 v-tooltip.top="calPlace.uid"
               />
@@ -85,7 +88,6 @@
         </div>
       </form>
       
-      <!-- 按钮等分在同一行 -->
       <div class="button-row">
         <Button class="button equal-width" @click="handleCalculate">
           <i class="pi pi-calculator"></i>

@@ -13,6 +13,8 @@ import TimestampParser from '../views/TimestampParser.vue';
 // @ts-ignore
 import BruteForce from '../views/BruteForce.vue';
 // @ts-ignore
+import FileReader from '../views/FileReader.vue';
+// @ts-ignore
 import About from '../views/About.vue';
 
 const routes = [
@@ -49,6 +51,11 @@ const routes = [
         path: '/BruteForce',
         name: 'BruteForce',
         component: BruteForce
+    },
+    {
+        path: '/FileReader',
+        name: 'FileReader',
+        component: FileReader
     },
     {
         path: '/About',

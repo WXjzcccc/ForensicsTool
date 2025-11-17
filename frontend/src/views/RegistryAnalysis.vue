@@ -3,12 +3,12 @@
     <Card class="form-card">
       <template #content>
       <form class="form-layout">
-        <!-- 文本输入框独占一行 -->
         <div class="field full-width">
           <FloatLabel variant="on">
             <InputText 
               id="file"
               v-model="form.file" 
+              aria-autocomplete="none"
               placeholder="请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件" 
               @drop.prevent="handleDrop"
               @dragover.prevent
@@ -18,8 +18,6 @@
           </FloatLabel>
         </div>
       </form>
-      
-      <!-- 按钮等分在同一行 -->
       <div class="button-row">
         <Button class="button equal-width" @click="handleExtract">
           <i class="pi pi-search"></i>
@@ -153,6 +151,7 @@ const handleExtract = () => {
     return
   }
   AnalyzeWinReg(file).then((result) => {
+  
     try {
       if (result.err !== "") {
         toast.add({ severity: 'error', summary: '错误', detail: result.err, life: 3000 })
@@ -178,6 +177,10 @@ const handleResult = (result) => {
     tabs.value.push({
       value: tab, label: tab
     })
+    if (result.data[tab] == null) {
+        toast.add({ severity: 'warn', summary: '提示', detail: tab + '无数据', life: 3000 })
+      continue
+    }
     let inf = result.data[tab][0]
     tableData.value[tab] = {}
     columns.value[tab] = []

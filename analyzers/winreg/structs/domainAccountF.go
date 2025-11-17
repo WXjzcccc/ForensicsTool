@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/donnie4w/go-logger/logger"
 	"github.com/ghostiam/binstruct"
 )
 
@@ -46,6 +47,7 @@ func getSamKeyData(binData []byte) *SamKeyData {
 	decoder := binstruct.NewDecoder(bytes.NewReader(binData), binary.LittleEndian)
 	err := decoder.Decode(&samKeyData)
 	if err != nil {
+		logger.Error("解析SamKeyData失败:", err)
 		return nil
 	}
 	return &samKeyData
@@ -65,6 +67,7 @@ func getSamKeyDataAes(binData []byte) *SamKeyDataAes {
 	decoder := binstruct.NewDecoder(bytes.NewReader(binData), binary.LittleEndian)
 	err := decoder.Decode(&samKeyDataAes)
 	if err != nil {
+		logger.Error("解析SamKeyDataAes失败:", err)
 		return nil
 	}
 	return &samKeyDataAes
@@ -73,6 +76,7 @@ func getSamKeyDataAes(binData []byte) *SamKeyDataAes {
 func (*DomainAccountF) ParseWindowsFileTimestamp(r binstruct.Reader) (string, error) {
 	ts, err := r.ReadUint64()
 	if err != nil {
+		logger.Error("读取Windows文件时间戳失败:", err)
 		return "", err
 	}
 	return utils.WindowsFileTimeToDatetime(ts, "", ""), nil
@@ -81,10 +85,12 @@ func (*DomainAccountF) ParseWindowsFileTimestamp(r binstruct.Reader) (string, er
 func (d *DomainAccountF) ParseSamKeyData(r binstruct.Reader) (interface{}, error) {
 	marker, err := r.Peek(1)
 	if err != nil {
+		logger.Error("读取SamKeyData标记失败:", err)
 		return nil, err
 	}
 	data, err := r.ReadAll()
 	if err != nil {
+		logger.Error("读取SamKeyData数据失败:", err)
 		return nil, err
 	}
 	switch marker[0] {
@@ -93,6 +99,7 @@ func (d *DomainAccountF) ParseSamKeyData(r binstruct.Reader) (interface{}, error
 	case byte(2):
 		return getSamKeyDataAes(data), nil
 	}
+	logger.Error("无效的SamKeyData标记:", marker[0])
 	return nil, fmt.Errorf("invalid marker")
 }
 
@@ -101,6 +108,7 @@ func GetDomainAccountF(binData []byte) *DomainAccountF {
 	decoder := binstruct.NewDecoder(bytes.NewReader(binData), binary.LittleEndian)
 	err := decoder.Decode(&domainAccountF)
 	if err != nil {
+		logger.Error("解析DomainAccountF失败:", err)
 		return nil
 	}
 	return &domainAccountF

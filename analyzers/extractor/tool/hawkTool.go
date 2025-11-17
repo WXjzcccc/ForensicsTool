@@ -3,11 +3,13 @@ package tool
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/beevik/etree"
-	"github.com/deatil/go-cryptobin/cryptobin/crypto"
-	"github.com/iancoleman/orderedmap"
 	"os"
 	"strings"
+
+	"github.com/beevik/etree"
+	"github.com/deatil/go-cryptobin/cryptobin/crypto"
+	"github.com/donnie4w/go-logger/logger"
+	"github.com/iancoleman/orderedmap"
 )
 
 func decryptHawk(encData, entity, pwd string) string {
@@ -45,6 +47,7 @@ func AnalyzeHawk2(filePath, pwd string) (*orderedmap.OrderedMap, error) {
 		return nil, err
 	}
 	if fileInfo.IsDir() {
+		logger.Errorf("%s is not a file", filePath)
 		return nil, fmt.Errorf("%s is not a file", filePath)
 	}
 	result := orderedmap.New()
