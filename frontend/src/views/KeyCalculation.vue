@@ -18,73 +18,47 @@
           </FloatLabel>
         </div>
         
-        <div class="input-row">
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="uin"
-                v-model="form.uin" 
-                aria-autocomplete="none"
-                :placeholder="calPlace.uin"
-                v-tooltip.top="calPlace.uin"
-              />
-              <label for="uin">微信uin</label>
-            </FloatLabel>
-          </div>
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="imei"
-                v-model="form.imei"
-                aria-autocomplete="none"
-                :placeholder="calPlace.imei"
-                v-tooltip.top="calPlace.imei"
-              />
-              <label for="imei">imei</label>
-            </FloatLabel>
-          </div>
-        </div>
-        
-        <div class="input-row">
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="wxid"
-                v-model="form.wxid"
-                aria-autocomplete="none"
-                :placeholder="calPlace.wxid"
-                v-tooltip.top="calPlace.wxid"
-              />
-              <label for="wxid">wxid</label>
-            </FloatLabel>
-          </div>
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="token"
-                v-model="form.token"
-                aria-autocomplete="none"
-                :placeholder="calPlace.token"
-                v-tooltip.top="calPlace.token"
-              />
-              <label for="token">token</label>
-            </FloatLabel>
-          </div>
-        </div>
-        
-        <div class="input-row">
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="uid"
-                v-model="form.uid" 
-                aria-autocomplete="none"
-                :placeholder="calPlace.uid"
-                v-tooltip.top="calPlace.uid"
-              />
-              <label for="uid">uid</label>
-            </FloatLabel>
-          </div>
+        <!-- 动态生成的输入字段 -->
+        <div v-for="(row, rowIndex) in inputFields" :key="rowIndex" class="input-row">
+          <div v-for="field in row" :key="field.name" class="field" :class="row.length === 1 ? 'full-width' : 'half-width'">
+              <!-- 根据字段类型渲染不同的组件 -->
+              <div v-if="field.type === 'checkbox'" class="flex align-items-center mt-3">
+                <Checkbox :id="field.name" v-model="form[field.name]" :binary="true" />
+                <label :for="field.name" class="ml-2">{{ field.label }}</label>
+              </div>
+              
+              <FloatLabel v-else variant="on">
+                <InputText v-if="field.type === 'input'" 
+                          :id="field.name" 
+                          v-model="form[field.name]" 
+                          aria-autocomplete="none"
+                          :placeholder="calPlace[field.name]"
+                          v-tooltip.top="calPlace[field.name]" />
+                          
+                <!-- 下拉选择框 -->
+                <Dropdown v-else-if="field.type === 'dropdown'"
+                          :id="field.name"
+                          v-model="form[field.name]"
+                          :options="field.options"
+                          optionLabel="label"
+                          optionValue="value"
+                          class="w-full" />
+                          
+                <!-- 数字输入框 -->
+                <InputNumber v-else-if="field.type === 'number'"
+                            :id="field.name"
+                            v-model="form[field.name]"
+                            class="w-full" />
+                            
+                <!-- 日期选择器 -->
+                <Calendar v-else-if="field.type === 'calendar'"
+                          :id="field.name"
+                          v-model="form[field.name]"
+                          class="w-full" />
+                          
+                <label :for="field.name">{{ field.label }}</label>
+              </FloatLabel>
+            </div>
         </div>
       </form>
       
@@ -112,14 +86,51 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {ref, computed, watch} from 'vue'
 import {CalMostone, CalTiktok, CalWechat, CalWechatIndex, CalWildFire} from "../../wailsjs/go/passwdCalc/PasswdCalc.js";
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
 import {usePageDataStore} from "@/store";
-import {watch} from "vue";
 import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Checkbox from 'primevue/checkbox'
+import Calendar from 'primevue/calendar'
+import Button from 'primevue/button'
+import Dropdown from 'primevue/dropdown'
 import Empty from '@/components/Empty.vue'
+
+// 任务配置对象，定义每个任务需要的输入字段
+const taskConfigs = {
+  "1": { // 微信的EnMicroMsg.db
+    fields: [
+      { name: "uin", label: "微信uin", type: "input" },
+      { name: "imei", label: "imei", type: "input" }
+    ]
+  },
+  "2": { // 微信的FTS5IndexMicroMsg_encrypt.db
+    fields: [
+      { name: "uin", label: "微信uin", type: "input" },
+      { name: "wxid", label: "wxid", type: "input" },
+      { name: "imei", label: "imei", type: "input" }
+    ]
+  },
+  "3": { // 野火IM系应用的data
+    fields: [
+      { name: "token", label: "token", type: "input" }
+    ]
+  },
+  "4": { // 默往APP的msg.db
+    fields: [
+      { name: "uid", label: "uid", type: "input" }
+    ]
+  },
+  "5": { // 抖音的聊天数据库
+    fields: [
+      { name: "uid", label: "uid", type: "input" }
+    ]
+  }
+}
 const calPlace = {
   uin:"微信用户的uin，可能是负值，在shared_prefs/auth_info_key_prefs.xml文件中_auth_uin的值",
   imei:"微信获取到的IMEI或MEID，在shared_prefs/DENGTA_META.xml文件中IMEI_DENGTA的值，在高版本中通常是1234567890ABCDEF，可以为空",
@@ -142,8 +153,25 @@ const options = ref([
   {label:"微信的FTS5IndexMicroMsg_encrypt.db",value:"2"},
   {label:"野火IM系应用的data",value:"3"},
   {label:"默往APP的msg.db",value:"4"},
-  {label:"抖音的聊天数据库",value:"5"},
+  {label:"抖音的聊天数据库",value:"5"}
 ])
+
+// 根据选择的任务获取当前任务的配置
+const currentTaskConfig = computed(() => {
+  return taskConfigs[form.value.selected] || { fields: [] }
+})
+
+// 动态生成输入字段数组，每行最多两个字段
+const inputFields = computed(() => {
+  const fields = currentTaskConfig.value.fields || []
+  const result = []
+  
+  for (let i = 0; i < fields.length; i += 2) {
+    result.push(fields.slice(i, i + 2))
+  }
+  
+  return result
+})
 
 watch([form,resultText],()=>{
   store.saveKeyCalculationData({
@@ -153,20 +181,24 @@ watch([form,resultText],()=>{
 })
 
 const handleCalculate = () => {
-  var uin = form.value.uin;
-  var imei = form.value.imei;
-  var wxid = form.value.wxid;
-  var token = form.value.token;
-  var uid = form.value.uid;
+  // 从form中获取当前任务需要的字段值
+  const currentFields = currentTaskConfig.value.fields
+  const params = {}
+  
+  // 只获取当前任务需要的字段值
+  currentFields.forEach(field => {
+    params[field.name] = form.value[field.name]
+  })
+  
   switch (form.value.selected) {
     case "1":{
-      CalWechat(uin,imei).then((result)=>{
+      CalWechat(params.uin, params.imei).then((result)=>{
         resultText.value += generateSuccessTextOutput("成功获取到安卓微信EnMicroMsg.db数据库密钥",result)
       })
       break;
     }
     case "2":{
-      CalWechatIndex(uin,wxid,imei).then((result)=>{
+      CalWechatIndex(params.uin, params.wxid, params.imei).then((result)=>{
         if (result !== ""){
           resultText.value += generateSuccessTextOutput("成功获取到安卓微信FTS5IndexMicroMsg_encrypt.db数据库密钥",result)
         }else{
@@ -176,21 +208,21 @@ const handleCalculate = () => {
       break;
     }
     case "3":{
-      CalWildFire(token).then((result)=>{
+      CalWildFire(params.token).then((result)=>{
         resultText.value += generateSuccessTextOutput("成功获取到野火IM数据库密钥",result[0])
         resultText.value += generateNormalTextOutput(result[1],"green")
       })
       break;
     }
     case "4":{
-      CalMostone(uid).then((result)=>{
+      CalMostone(params.uid).then((result)=>{
         resultText.value += generateSuccessTextOutput("成功获取到默往msg.db数据库密钥",result[0])
         resultText.value += generateNormalTextOutput(result[1],"green")
       })
       break;
     }
     case "5":{
-      CalTiktok(uid).then((result)=>{
+      CalTiktok(params.uid).then((result)=>{
         resultText.value += generateSuccessTextOutput("成功获取到抖音聊天数据库密钥",result[0])
         resultText.value += generateNormalTextOutput(result[1],"green")
       })

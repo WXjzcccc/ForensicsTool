@@ -17,31 +17,20 @@
             />
           </FloatLabel>
         </div>
-        <div class="input-row">
-          <div class="field half-width">
+        <div v-for="(fieldGroup, index) in inputFields" :key="index" class="input-row">
+          <div v-for="field in fieldGroup" :key="field.name" class="field half-width">
             <FloatLabel variant="on">
               <InputText 
-                id="file"
-                v-model="form.file" 
-                placeholder="请拖入文件或目录"
+                v-if="field.type === 'input'"
+                :id="field.name"
+                v-model="form[field.name]" 
+                :placeholder="field.name === 'file' ? '请拖入文件或目录' : '解密密码'"
                 aria-autocomplete="none"
-                @drop.prevent="handleDrop"
-                @dragover.prevent
-                v-tooltip.top="'拖入要解密的数据库文件路径'"
+                @drop.prevent="field.name === 'file' ? handleDrop : null"
+                @dragover.prevent="field.name === 'file' ? null : null"
+                v-tooltip.top="field.name === 'file' ? '拖入要解密的数据库文件路径' : '输入解密数据库所需的密码（某些数据库需要）'"
               />
-              <label for="file">文件/目录</label>
-            </FloatLabel>
-          </div>
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="password"
-                v-model="form.password" 
-                aria-autocomplete="none"
-                placeholder="解密密码"
-                v-tooltip.top="'输入解密数据库所需的密码（某些数据库需要）'"
-              />
-              <label for="password">密码</label>
+              <label :for="field.name">{{ field.label }}</label>
             </FloatLabel>
           </div>
         </div>
@@ -71,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import {
   DecryptAMapDB,
@@ -86,6 +75,63 @@ import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import Empty from '@/components/Empty.vue'
 
+// 任务配置对象，定义每个任务需要的输入字段
+const taskConfigs = {
+  "1": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "2": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "3": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" }
+    ]
+  },
+  "4": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "5": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "6": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "7": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "8": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  },
+  "9": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  }
+}
+
 const toast = useToast()
 const store = usePageDataStore()
 const form = ref(store.databaseDecryptStore?.formData || {
@@ -93,6 +139,21 @@ const form = ref(store.databaseDecryptStore?.formData || {
   password:"",
   file:"",
 })
+// 计算当前任务配置
+const currentTaskConfig = computed(() => {
+  return taskConfigs[form.value.selected] || { fields: [] }
+})
+
+// 计算输入字段，每两个一组
+const inputFields = computed(() => {
+  const fields = currentTaskConfig.value.fields
+  const groups = []
+  for (let i = 0; i < fields.length; i += 2) {
+    groups.push(fields.slice(i, i + 2))
+  }
+  return groups
+})
+
 const resultText = ref(store.databaseDecryptStore?.resultData || "")
 const options = ref([
   {label:"微信的EnMicroMsg.db",value:"1"},
@@ -119,18 +180,26 @@ const handleClear = () => {
 }
 
 const handleDecrypt = () => {
-  if (!form.value.selected) {
-    toast.add({ severity: 'warn', summary: '警告', detail: '请选择任务类型', life: 3000 })
+  const currentConfig = taskConfigs[form.value.selected]
+  if (!currentConfig) {
+    toast.add({ severity: 'warn', summary: '警告', detail: '请选择一个解密任务', life: 3000 })
     return
   }
-  
-  if (!form.value.file) {
-    toast.add({ severity: 'warn', summary: '警告', detail: '请选择文件或目录', life: 3000 })
+
+  // 动态构建参数对象
+  const params = {}
+  currentConfig.fields.forEach(field => {
+    params[field.name] = form.value[field.name]
+  })
+
+  // 从动态参数中获取file和password
+  const { file, password } = params
+
+  if (!file) {
+    toast.add({ severity: 'warn', summary: '警告', detail: '请输入文件/目录', life: 3000 })
     return
   }
-  
-  var file = form.value.file;
-  var password = form.value.password;
+
   var func
   
   switch (form.value.selected) {
@@ -170,6 +239,9 @@ const handleDecrypt = () => {
       func = DecryptSystemDataSQLite;
       break;
     }
+    default:
+      toast.add({ severity: 'warn', summary: '警告', detail: '请选择一个解密任务', life: 3000 })
+      return
   }
   
   toast.add({ severity: 'info', summary: '提示', detail: '开始解密...', life: 3000 })

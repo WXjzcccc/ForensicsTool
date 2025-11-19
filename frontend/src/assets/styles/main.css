@@ -1161,6 +1161,11 @@ html, body {
     border-radius: 4px;
 }
 
+.p-progressbar.equal-width {
+    flex: 1;
+    border-radius: 4px;
+}
+
 /* 结果输出样式 */
 .result-output {
     white-space: pre-wrap;

@@ -18,56 +18,19 @@
           </FloatLabel>
         </div>
         
-        <div class="input-row">
-          <div class="field half-width">
-              <FloatLabel variant="on">
-                  <InputText v-tooltip.top=brutePlace.target
-                    aria-autocomplete="none"
-                    id="target"
-                    v-model="form.target"
-                    :placeholder="brutePlace.target"
-                  />
-                  <label for="on_label">爆破目标</label>
-              </FloatLabel>
-          </div>
-          <div class="field half-width">
+        <div v-for="(fieldGroup, index) in inputFields" :key="index" class="input-row">
+          <div v-for="field in fieldGroup" :key="field.name" class="field half-width">
             <FloatLabel variant="on">
-            <label for="region">区号</label>
               <InputText 
-                v-tooltip.top=brutePlace.region
+                v-if="field.type === 'input'"
+                v-tooltip.top="brutePlace[field.name]"
                 aria-autocomplete="none"
-                id="region"
-                v-model="form.region" 
-                :placeholder="brutePlace.region"
+                :id="field.name"
+                v-model="form[field.name]" 
+                :placeholder="brutePlace[field.name]"
               />
-              </FloatLabel>
-          </div>
-        </div>
-        
-        <div class="input-row">
-          <div class="field half-width">
-            <FloatLabel variant="on">
-            <label for="mac">号段</label>
-              <InputText 
-                v-tooltip.top=brutePlace.mac
-                aria-autocomplete="none"
-                id="mac"
-                v-model="form.mac" 
-                :placeholder="brutePlace.mac"
-              />
-              </FloatLabel>
-          </div>
-          <div class="field half-width">
-            <FloatLabel variant="on">
-            <label for="length">长度</label>
-              <InputText 
-                v-tooltip.top=brutePlace.length
-                aria-autocomplete="none"
-                id="length"
-                v-model="form.length" 
-                :placeholder="brutePlace.length"
-              />
-              </FloatLabel>
+              <label :for="field.name">{{ field.label }}</label>
+            </FloatLabel>
           </div>
         </div>
       </form>
@@ -86,6 +49,7 @@
         </Button>
       </div>
       </template>
+
     </Card>
     <Card class="result-card">
       <template #content>
@@ -96,11 +60,12 @@
       </template>
     </Card>
     <Toast position="bottom-right"/>
+    <ProgressBar v-if="cracking" mode="indeterminate" style="height: 1vh" />
   </div>
 </template>
 
 <script setup>
-import {ref, watch, onMounted} from 'vue'
+import {ref, watch, onMounted, computed} from 'vue'
 import {useToast} from 'primevue/usetoast'
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
 import {usePageDataStore} from "@/store";
@@ -116,6 +81,23 @@ const brutePlace = {
   mac:"AirDrop要爆破的号段，以,进行分隔，如139,138",
   length:"AirDrop要爆破的手机号长度（除去区号和号段）",
 }
+// 任务配置对象，定义每个任务需要的输入字段
+const taskConfigs = {
+  "1": {
+    fields: [
+      { name: "target", label: "爆破目标", type: "input" },
+      { name: "region", label: "区号", type: "input" },
+      { name: "mac", label: "号段", type: "input" },
+      { name: "length", label: "长度", type: "input" }
+    ]
+  },
+  "2": {
+    fields: [
+      { name: "target", label: "爆破目标", type: "input" }
+    ]
+  }
+}
+
 const form = ref(store.bruteForceStore?.formData || {
   selected:"",
   target:"",
@@ -123,12 +105,26 @@ const form = ref(store.bruteForceStore?.formData || {
   region:"",
   length:"",
 })
+// 计算当前任务配置
+const currentTaskConfig = computed(() => {
+  return taskConfigs[form.value.selected] || { fields: [] }
+})
+
+// 计算输入字段，每两个一组
+const inputFields = computed(() => {
+  const fields = currentTaskConfig.value.fields
+  const groups = []
+  for (let i = 0; i < fields.length; i += 2) {
+    groups.push(fields.slice(i, i + 2))
+  }
+  return groups
+})
 const resultText = ref(store.bruteForceStore?.resultData || "")
-const cracking = ref(store.getBruteForceCrackingState())
 const options = ref([
   {label:"AirDrop手机号爆破",value:"1"},
   {label:"微信UIN爆破",value:"2"},
 ])
+const cracking = ref(store.getBruteForceCrackingState())
 
 // 组件挂载时，如果爆破状态为true，则重新启动状态检查
 onMounted(() => {
@@ -160,17 +156,21 @@ watch(cracking, (newValue) => {
 })
 
 const handleBruteForce = () => {
-  var region = form.value.region;
-  var target = form.value.target;
-  var mac = form.value.mac;
-  var length = form.value.length;
+  const currentConfig = currentTaskConfig.value
+  const params = {}
+  
+  // 根据当前任务配置构建参数
+  currentConfig.fields.forEach(field => {
+    params[field.name] = form.value[field.name]
+  })
+  
   switch (form.value.selected) {
     case "1":{
       let head = ""
       let tail = ""
       let macs = []
-      if (target !== "" && target.indexOf(",") !== -1){
-        let tmp = target.split(",")
+      if (params.target !== "" && params.target.indexOf(",") !== -1){
+        let tmp = params.target.split(",")
         if(tmp.length !== 2){
           toast.add({ severity: 'error', summary: '错误', detail: 'AirDrop必须提供首位各5尾的哈希值', life: 5000 })
           return
@@ -179,26 +179,26 @@ const handleBruteForce = () => {
         tail = tmp[1]
       }
 
-      if (mac !== ""){
-        if(mac.indexOf(",") !== -1){
-          macs = mac.split(",")
+      if (params.mac !== ""){
+        if(params.mac.indexOf(",") !== -1){
+          macs = params.mac.split(",")
         }else{
-          macs.push(mac)
+          macs.push(params.mac)
         }
       }
       handleState()
-      CrackAirDrop(head,tail,region,macs,parseInt(length)).then((result)=>{
+      CrackAirDrop(head,tail,params.region,macs,parseInt(params.length)).then((result)=>{
         handleResult(result)
       })
       break;
     }
     case "2":{
       let para = []
-      if (target !== ""){
-        if (target.indexOf(",") !== -1){
-          para.push(target)
+      if (params.target !== ""){
+        if (params.target.indexOf(",") !== -1){
+          para.push(params.target)
         }else{
-          para = target.split(",")
+          para = params.target.split(",")
         }
       }
       handleState()

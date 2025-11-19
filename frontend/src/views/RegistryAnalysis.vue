@@ -3,19 +3,22 @@
     <Card class="form-card">
       <template #content>
       <form class="form-layout">
-        <div class="field full-width">
-          <FloatLabel variant="on">
-            <InputText 
-              id="file"
-              v-model="form.file" 
-              aria-autocomplete="none"
-              placeholder="请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件" 
-              @drop.prevent="handleDrop"
-              @dragover.prevent
-              v-tooltip.top="'请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件'"
-            />
-            <label for="file">文件夹</label>
-          </FloatLabel>
+        <div v-for="(fieldGroup, index) in inputFields" :key="index" class="input-row">
+          <div v-for="field in fieldGroup" :key="field.name" class="field half-width">
+            <FloatLabel variant="on">
+              <InputText 
+                v-if="field.type === 'input'"
+                :id="field.name"
+                v-model="form[field.name]" 
+                aria-autocomplete="none"
+                placeholder="请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件" 
+                @drop.prevent="handleDrop"
+                @dragover.prevent
+                v-tooltip.top="'请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件'"
+              />
+              <label :for="field.name">{{ field.label }}</label>
+            </FloatLabel>
+          </div>
         </div>
       </form>
       <div class="button-row">
@@ -90,11 +93,35 @@ import Tabs from 'primevue/tabs'
 import Empty from '@/components/Empty.vue'
 import { useTableHeight } from '@/composables/useTableHeight.js'
 
+// 任务配置对象，定义每个任务需要的输入字段
+const taskConfigs = {
+  "1": {
+    fields: [
+      { name: "file", label: "文件夹", type: "input" }
+    ]
+  }
+}
+
 const toast = useToast()
 const store = usePageDataStore()
 const form = ref(store.registryStore?.formData || {
   file: '',
 })
+// 计算当前任务配置
+const currentTaskConfig = computed(() => {
+  return taskConfigs["1"] || { fields: [] }
+})
+
+// 计算输入字段，每两个一组
+const inputFields = computed(() => {
+  const fields = currentTaskConfig.value.fields
+  const groups = []
+  for (let i = 0; i < fields.length; i += 2) {
+    groups.push(fields.slice(i, i + 2))
+  }
+  return groups
+})
+
 const tableData = ref(store.registryStore?.tableData || {})
 const tabs = ref(store.registryStore?.tabsData || [])
 const activeTab = ref(store.registryStore?.tabData || '')
@@ -144,14 +171,30 @@ const loading = ref(false)
 
 const handleExtract = () => {
   loading.value = true
-  let file = form.value.file
+  
+  const currentConfig = taskConfigs["1"]
+  if (!currentConfig) {
+    toast.add({ severity: 'error', summary: '错误', detail: '配置错误', life: 3000 })
+    loading.value = false
+    return
+  }
+
+  // 动态构建参数对象
+  const params = {}
+  currentConfig.fields.forEach(field => {
+    params[field.name] = form.value[field.name]
+  })
+
+  // 从动态参数中获取file
+  const { file } = params
+
   if (file === "" || file === undefined || file === null) {
     toast.add({ severity: 'error', summary: '错误', detail: '参数错误！', life: 3000 })
     loading.value = false
     return
   }
-  AnalyzeWinReg(file).then((result) => {
   
+  AnalyzeWinReg(file).then((result) => {
     try {
       if (result.err !== "") {
         toast.add({ severity: 'error', summary: '错误', detail: result.err, life: 3000 })

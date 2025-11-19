@@ -18,31 +18,20 @@
           </FloatLabel>
         </div>
         
-        <div class="input-row">
-          <div class="field half-width">
+        <div v-for="(fieldGroup, index) in inputFields" :key="index" class="input-row">
+          <div v-for="field in fieldGroup" :key="field.name" class="field half-width">
             <FloatLabel variant="on">
               <InputText 
-                id="file"
-                v-model="form.file" 
-                placeholder="请拖入文件或目录"
+                v-if="field.type === 'input'"
+                :id="field.name"
+                v-model="form[field.name]" 
+                :placeholder="field.name === 'file' ? '请拖入文件或目录' : '解密密码'"
                 aria-autocomplete="none"
-                @drop.prevent="handleDrop"
-                @dragover.prevent
-                v-tooltip.top="'拖入要提取数据的文件或目录路径'"
+                @drop.prevent="field.name === 'file' ? handleDrop : null"
+                @dragover.prevent="field.name === 'file' ? null : null"
+                v-tooltip.top="field.name === 'file' ? '拖入要提取数据的文件或目录路径' : '输入解密所需的密码（某些任务需要）'"
               />
-              <label for="file">文件/目录</label>
-            </FloatLabel>
-          </div>
-          <div class="field half-width">
-            <FloatLabel variant="on">
-              <InputText 
-                id="password"
-                aria-autocomplete="none"
-                v-model="form.password" 
-                placeholder="解密密码"
-                v-tooltip.top="'输入解密所需的密码（某些任务需要）'"
-              />
-              <label for="password">密码</label>
+              <label :for="field.name">{{ field.label }}</label>
             </FloatLabel>
           </div>
         </div>
@@ -119,6 +108,21 @@ import Tabs from 'primevue/tabs'
 import Empty from '@/components/Empty.vue'
 import { useTableHeight } from '@/composables/useTableHeight.js'
 
+// 任务配置对象，定义每个任务需要的输入字段
+const taskConfigs = {
+  "1": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" }
+    ]
+  },
+  "2": {
+    fields: [
+      { name: "file", label: "文件/目录", type: "input" },
+      { name: "password", label: "密码", type: "input" }
+    ]
+  }
+}
+
 const toast = useToast()
 const store = usePageDataStore()
 const form = ref(store.fileReaderStore?.formData || {
@@ -126,6 +130,21 @@ const form = ref(store.fileReaderStore?.formData || {
   file: '',
   password: '',
 })
+// 计算当前任务配置
+const currentTaskConfig = computed(() => {
+  return taskConfigs[form.value.selected] || { fields: [] }
+})
+
+// 计算输入字段，每两个一组
+const inputFields = computed(() => {
+  const fields = currentTaskConfig.value.fields
+  const groups = []
+  for (let i = 0; i < fields.length; i += 2) {
+    groups.push(fields.slice(i, i + 2))
+  }
+  return groups
+})
+
 const tableData = ref(store.fileReaderStore?.tableData || {})
 const tabs = ref(store.fileReaderStore?.tabsData || [])
 const activeTab = ref(store.fileReaderStore?.tabData || '')
@@ -179,14 +198,30 @@ const loading = ref(false)
 
 const handleExtract = () => {
   loading.value = true
-  let file = form.value.file
-  let password = form.value.password
-  let func = null
+  
+  const currentConfig = taskConfigs[form.value.selected]
+  if (!currentConfig) {
+    toast.add({ severity: 'error', summary: '错误', detail: '请选择一个任务', life: 3000 })
+    loading.value = false
+    return
+  }
+
+  // 动态构建参数对象
+  const params = {}
+  currentConfig.fields.forEach(field => {
+    params[field.name] = form.value[field.name]
+  })
+
+  // 从动态参数中获取file和password
+  const { file, password } = params
+
   if (file === "" || file === undefined || file === null) {
     toast.add({ severity: 'error', summary: '错误', detail: '文件参数异常！', life: 3000 })
     loading.value = false
     return
   }
+  
+  let func = null
   switch (form.value.selected) {
     case "1":
         func = ReadLevelDB
@@ -195,16 +230,13 @@ const handleExtract = () => {
         func = ReadMMKV
         break
   }
-  if (form.value.selected === "2" ||
-      form.value.selected === "5" ||
-      form.value.selected === "6") {
+  
+  if (form.value.selected === "2") {
     if (password === "" || password === undefined || password === null) {
-    if (form.value.selected !== "2"){
       toast.add({ severity: 'error', summary: '错误', detail: '密码参数异常！', life: 3000 })
       loading.value = false
       return
     }
-}
     func(file, password).then((result) => {
         console.log(result)
       try {

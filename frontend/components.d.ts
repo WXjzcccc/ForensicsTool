@@ -24,6 +24,7 @@ declare module 'vue' {
     Menu: typeof import('primevue/menu')['default']
     Message: typeof import('primevue/message')['default']
     ProductOverviewWidget: typeof import('./src/components/dashboard/ProductOverviewWidget.vue')['default']
+    ProgressBar: typeof import('primevue/progressbar')['default']
     RecentActivityWidget: typeof import('./src/components/dashboard/RecentActivityWidget.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
