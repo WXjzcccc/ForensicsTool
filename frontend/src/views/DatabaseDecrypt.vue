@@ -26,8 +26,7 @@
                 v-model="form[field.name]" 
                 :placeholder="field.name === 'file' ? '请拖入文件或目录' : '解密密码'"
                 aria-autocomplete="none"
-                @drop.prevent="field.name === 'file' ? handleDrop : null"
-                @dragover.prevent="field.name === 'file' ? null : null"
+                @drop.prevent="field.name === 'file' ? null : null"
                 v-tooltip.top="field.name === 'file' ? '拖入要解密的数据库文件路径' : '输入解密数据库所需的密码（某些数据库需要）'"
               />
               <label :for="field.name">{{ field.label }}</label>
@@ -272,14 +271,14 @@ const handleDecrypt = () => {
   }
 }
 
-const handleDrop = (event) => {
+onMounted(() => {
   OnFileDrop((x, y, paths) => {
     if (paths.length > 0) {
       form.value.file = paths[0]
       toast.add({ severity: 'success', summary: '成功', detail: '文件已添加', life: 3000 })
     }
   }, false)
-}
+})
 
 watch(resultText, () => {
   const card = document.querySelector('.result-card');

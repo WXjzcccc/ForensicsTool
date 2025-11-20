@@ -12,7 +12,7 @@
                 v-model="form[field.name]" 
                 aria-autocomplete="none"
                 placeholder="请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件" 
-                @drop.prevent="handleDrop"
+                @drop.prevent
                 @dragover.prevent
                 v-tooltip.top="'请拖入目录，目录包含SYSTEM、SAM、SOFRWARE和用户注册表文件'"
               />
@@ -262,14 +262,14 @@ const handleCellClick = (value) => {
   })
 }
 
-const handleDrop = (event) => {
+onMounted(() => {
   OnFileDrop((x, y, paths) => {
     if (paths.length > 0) {
       form.value.file = paths[0]
       toast.add({ severity: 'success', summary: '成功', detail: '文件已添加', life: 3000 })
     }
   }, false)
-}
+})
 
 const onColumnReorder = (event) => {
   columns.value[activeTab.value] = event.columns

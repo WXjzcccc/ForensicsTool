@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // 助记词顺序恢复是单独的，就不放进来了
@@ -23,10 +25,19 @@ type CrackResult struct {
 	Error  string `json:"error"`
 }
 
+const (
+	ProgressEvent = "ForensicsTool::BruteForce::Progress"
+	StateEvent    = "ForensicsTool::BruteForce::State"
+)
+
 var CrackState string
 var CalCount int = 0
 var DoneCount int = 0
 var Counts int = 0
+
+var TotalCount int = 0
+var Current int = 0
+var Frequency int = 10_000
 
 func NewForensicsCracker() *ForensicsCracker {
 	return &ForensicsCracker{}
@@ -47,4 +58,20 @@ func (f *ForensicsCracker) CancelCrack() {
 func (f *ForensicsCracker) GetState() string {
 	return fmt.Sprintf("状态：%s\n耗时：%v\n信息：{\n\t结果：%v\n\t耗时：%v\n\t错误：%v\n}",
 		CrackState, time.Since(f.startTime), f.crackResult.Result, f.crackResult.Time, f.crackResult.Error)
+}
+
+func (f *ForensicsCracker) sendProgress() {
+	go runtime.EventsEmit(f.ctx, ProgressEvent, Current, TotalCount)
+}
+
+func (f *ForensicsCracker) sendState() {
+	go runtime.EventsEmit(f.ctx, StateEvent, fmt.Sprintf("状态：%s\n耗时：%v\n信息：{\n\t结果：%v\n\t耗时：%v\n\t错误：%v\n}",
+		CrackState, time.Since(f.startTime), f.crackResult.Result, f.crackResult.Time, f.crackResult.Error))
+}
+
+func (f *ForensicsCracker) sendEvent() {
+	if Current%Frequency == 0 {
+		f.sendState()
+		f.sendProgress()
+	}
 }

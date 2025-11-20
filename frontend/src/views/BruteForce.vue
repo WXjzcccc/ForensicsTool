@@ -59,9 +59,9 @@
         <div class="result-output" v-html="resultText"/>
       </template>
     </Card>
-    <Toast position="bottom-right"/>
-    <ProgressBar v-if="cracking" mode="indeterminate" style="height: 1vh" />
+    <ProgressBar v-if="cracking" :value="progressValue" style="height: 1vh" />
   </div>
+  <Toast position="bottom-right"/>
 </template>
 
 <script setup>
@@ -69,9 +69,10 @@ import {ref, watch, onMounted, computed} from 'vue'
 import {useToast} from 'primevue/usetoast'
 import {generateNormalTextOutput, generateSuccessTextOutput} from "@/utils.js";
 import {usePageDataStore} from "@/store";
-import {CancelCrack, CrackAirDrop, CrackWXUin, GetState} from "../../wailsjs/go/cracker/ForensicsCracker.js";
+import {CancelCrack, CrackAirDrop, CrackWXUin} from "../../wailsjs/go/cracker/ForensicsCracker.js";
 import { Select } from 'primevue';
 import Empty from '@/components/Empty.vue';
+import { EventsOn } from '../../wailsjs/runtime/runtime.js';
 
 const toast = useToast()
 const store = usePageDataStore()
@@ -105,6 +106,8 @@ const form = ref(store.bruteForceStore?.formData || {
   region:"",
   length:"",
 })
+const progressValue = ref(store.bruteForceStore?.progressValue || 0)
+
 // 计算当前任务配置
 const currentTaskConfig = computed(() => {
   return taskConfigs[form.value.selected] || { fields: [] }
@@ -126,27 +129,20 @@ const options = ref([
 ])
 const cracking = ref(store.getBruteForceCrackingState())
 
-// 组件挂载时，如果爆破状态为true，则重新启动状态检查
-onMounted(() => {
-  if (cracking.value) {
-    // 重新启动状态检查
-    const timer = setInterval(() => {
-      if (cracking.value) {
-        GetState().then((result)=>{
-          resultText.value += generateNormalTextOutput(result.replace("\n","<br>"),"#1937e5")
-        })
-      } else {
-        clearInterval(timer);
-      }
-    }, 5000);
-  }
+EventsOn("ForensicsTool::BruteForce::State",(data)=>{
+  resultText.value += generateNormalTextOutput(data.replace("\n","<br>"),"#1937e5")
+})
+
+EventsOn("ForensicsTool::BruteForce::Progress",(current,totalCount)=>{
+  progressValue.value = Math.round(current/totalCount*100*100)/100
 })
 
 watch([form,resultText],()=>{
   store.saveBruteForceData({
     formData:form.value,
     resultData:resultText.value,
-    cracking: cracking.value
+    cracking: cracking.value,
+    progressValue: progressValue.value
   })
 })
 
@@ -156,6 +152,7 @@ watch(cracking, (newValue) => {
 })
 
 const handleBruteForce = () => {
+  progressValue.value = 0
   const currentConfig = currentTaskConfig.value
   const params = {}
   
@@ -217,9 +214,10 @@ const handleClear = () => {
 
 const handleCancel = () => {
   CancelCrack().then(()=>{
-    cracking.value = false
+    progressValue.value = 0
     resultText.value += generateNormalTextOutput(`已手动取消`,"red")
     toast.add({ severity: 'warn', summary: '警告', detail: '已手动取消', life: 3000 })
+    cracking.value = false
   })
 }
 
@@ -235,15 +233,6 @@ function handleState(){
   cracking.value = true
   resultText.value += generateNormalTextOutput(`开始爆破`,"#ee5310")
   toast.add({ severity: 'info', summary: '信息', detail: '开始爆破', life: 3000 })
-  const timer = setInterval(() => {
-    if (cracking.value) {
-      GetState().then((result)=>{
-        resultText.value += generateNormalTextOutput(result.replace("\n","<br>"),"#1937e5")
-      })
-    } else {
-      clearInterval(timer);
-    }
-  }, 5000);
 }
 
 watch(resultText, () => {

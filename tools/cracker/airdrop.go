@@ -21,7 +21,7 @@ func getHeadAndTail(phone string) (string, string) {
 	return hash[:5], hash[len(hash)-5:]
 }
 
-func crackPhone(region, mac, head, tail string, length int, c chan string, ctx context.Context, wg *sync.WaitGroup) {
+func (f *ForensicsCracker) crackPhone(region, mac, head, tail string, length int, c chan string, ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for i := range int64(math.Pow(10, float64(length))) {
 		CrackState = fmt.Sprintf("爆破号段:%s\n", mac)
@@ -32,6 +32,8 @@ func crackPhone(region, mac, head, tail string, length int, c chan string, ctx c
 			fmtStr := "%s%s%0" + strconv.Itoa(length) + "d"
 			phone := fmt.Sprintf(fmtStr, region, mac, i)
 			hashHead, hashTail := getHeadAndTail(phone)
+			Current++
+			f.sendEvent()
 			if hashHead == head && hashTail == tail {
 				c <- fmt.Sprintf("[√]已找到匹配的手机号：%s\n", phone)
 			}
@@ -67,6 +69,9 @@ func (f *ForensicsCracker) CrackAirDrop(head, tail, region string, macs []string
 	if length == 0 {
 		length = 8
 	}
+	Current = 0
+	TotalCount = len(macs) * int(math.Pow10(length))
+	Frequency = TotalCount / 100
 	var wg sync.WaitGroup
 	go func() {
 		for i := range c {
@@ -74,15 +79,18 @@ func (f *ForensicsCracker) CrackAirDrop(head, tail, region string, macs []string
 			CrackState = f.crackResult.Result
 			f.crackResult.Time = time.Since(f.startTime).String()
 			f.crackResult.Error = ""
+			f.sendState()
 		}
 		f.crackCancel()
 		runtime.Goexit()
 	}()
 	for _, mac := range macs {
 		wg.Add(1)
-		go crackPhone(region, mac, head, tail, length, c, f.crackCtx, &wg)
+		go f.crackPhone(region, mac, head, tail, length, c, f.crackCtx, &wg)
 	}
 	wg.Wait()
+	Current = TotalCount
+	f.sendProgress()
 	if f.crackResult.Result == "" {
 		f.crackResult.Time = time.Since(f.startTime).String()
 		f.crackResult.Error = "未成功爆破"
