@@ -44,5 +44,5 @@ func (a *App) Greet(name string) string {
 }
 
 func (a *App) GetVersion() string {
-	return "v2.3"
+	return "v2.4"
 }

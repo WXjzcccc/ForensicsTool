@@ -113,13 +113,13 @@ html, body {
 
 /* TopBar样式 */
 .topbar {
-    background-color: var(--p-surface-0);
+    background-color: var(--p-surface-200) !important;
     border-bottom: 1px solid var(--p-surface-200);
     z-index: 10;
 }
 
 .p-dark .topbar {
-    background-color: var(--p-surface-900);
+    background-color: var(--p-surface-800) !important;
     border-bottom-color: var(--p-surface-700);
 }
 
