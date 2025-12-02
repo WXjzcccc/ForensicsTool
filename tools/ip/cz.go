@@ -173,25 +173,24 @@ func (i *IP) Search(ip string) *CZIP {
 	return czip
 }
 
-func (i *IP) SearchAll(ips []string) []*CZIP {
-	results := make([]*CZIP, len(ips))
+func (i *IP) SearchAll(ips []string) map[string]*CZIP {
+	results := make(map[string]*CZIP)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-
 	maxConcurrent := 10
 	semaphore := make(chan struct{}, maxConcurrent)
 
-	for idx, ip := range ips {
+	for _, ip := range ips {
 		wg.Add(1)
-		go func(index int, ipAddr string) {
+		go func(ipAddr string) {
 			defer wg.Done()
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 			result := i.Search(ipAddr)
 			mu.Lock()
-			results[index] = result
+			results[ip] = result
 			mu.Unlock()
-		}(idx, ip)
+		}(ip)
 	}
 	wg.Wait()
 	return results
