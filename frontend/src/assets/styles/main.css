@@ -102,7 +102,7 @@ html, body {
 
 .app-content {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: hidden;
     background-color: var(--p-surface-50);
     height: 100%;
 }

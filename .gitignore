@@ -5,3 +5,4 @@ build/bin
 *_test.go
 logs
 *.log
+.trae
