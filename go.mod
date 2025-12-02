@@ -11,6 +11,7 @@ require (
 	github.com/donnie4w/go-logger v0.28.0
 	github.com/ghostiam/binstruct v1.4.0
 	github.com/iancoleman/orderedmap v0.3.0
+	github.com/ipipdotnet/ipdb-go v1.3.3
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/tidwall/gjson v1.14.2
 	github.com/wailsapp/wails/v2 v2.10.2

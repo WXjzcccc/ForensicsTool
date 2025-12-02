@@ -78,6 +78,39 @@ export namespace extractor {
 
 }
 
+export namespace ip {
+	
+	export class CZIP {
+	    city_name: string;
+	    continent_code: string;
+	    country_code: string;
+	    country_name: string;
+	    district_name: string;
+	    isp_domain: string;
+	    owner_domain: string;
+	    region_name: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CZIP(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.city_name = source["city_name"];
+	        this.continent_code = source["continent_code"];
+	        this.country_code = source["country_code"];
+	        this.country_name = source["country_name"];
+	        this.district_name = source["district_name"];
+	        this.isp_domain = source["isp_domain"];
+	        this.owner_domain = source["owner_domain"];
+	        this.region_name = source["region_name"];
+	        this.error = source["error"];
+	    }
+	}
+
+}
+
 export namespace reader {
 	
 	export class ReadMapResult {

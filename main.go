@@ -7,6 +7,7 @@ import (
 	"ForensicsTool/analyzers/reader"
 	"ForensicsTool/analyzers/winreg"
 	"ForensicsTool/tools/cracker"
+	"ForensicsTool/tools/ip"
 	"ForensicsTool/tools/timestamp"
 	"context"
 	"embed"
@@ -34,6 +35,7 @@ func main() {
 	crack := cracker.NewForensicsCracker()
 	tp := timestamp.NewTimeStampParser()
 	reader := reader.NewFileReader()
+	czip := ip.NewIP()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "ForensicsTool",
@@ -55,6 +57,7 @@ func main() {
 			crack.InitCtx(ctx)
 			tp.InitCtx(ctx)
 			reader.InitCtx(ctx)
+			czip.InitCtx(ctx)
 		},
 		Bind: []interface{}{
 			app,
@@ -65,6 +68,7 @@ func main() {
 			crack,
 			tp,
 			reader,
+			czip,
 		},
 	})
 
