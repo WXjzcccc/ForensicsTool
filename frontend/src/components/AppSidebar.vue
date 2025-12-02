@@ -155,7 +155,7 @@ onUnmounted(() => {
 <style scoped>
 .sidebar {
     width: 15vw;
-    min-width: 50px;
+    min-width: 60px;
     max-width: 300px;
     background-color: var(--p-surface-100);
     border-right: 1px solid var(--p-surface-200);
@@ -174,8 +174,6 @@ onUnmounted(() => {
 
 .sidebar-collapsed {
     width: 5vw;
-    min-width: 60px;
-    max-width: 80px;
 }
 
 .sidebar-header {
