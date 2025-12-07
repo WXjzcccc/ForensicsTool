@@ -60,6 +60,7 @@ func (i *IP) LoadDB() error {
 
 	i.db = db
 	i.version = i.db.BuildTime().Format("2006-01-02")
+	logger.Debugf("【IP】当前纯真IP库版本<%s>", i.version)
 	return nil
 }
 

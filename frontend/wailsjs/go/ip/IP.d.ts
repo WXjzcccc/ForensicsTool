@@ -13,6 +13,6 @@ export function LoadDB():Promise<void>;
 
 export function Search(arg1:string):Promise<ip.CZIP>;
 
-export function SearchAll(arg1:Array<string>):Promise<Array<ip.CZIP>>;
+export function SearchAll(arg1:Array<string>):Promise<Record<string, ip.CZIP>>;
 
 export function UpdateDB():Promise<void>;

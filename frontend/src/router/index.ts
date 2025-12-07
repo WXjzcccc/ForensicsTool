@@ -16,6 +16,8 @@ import BruteForce from '../views/BruteForce.vue';
 import FileReader from '../views/FileReader.vue';
 // @ts-ignore
 import About from '../views/About.vue';
+// @ts-ignore
+import IPLocation from '../views/IPLocation.vue';
 
 const routes = [
     {
@@ -56,6 +58,11 @@ const routes = [
         path: '/FileReader',
         name: 'FileReader',
         component: FileReader
+    },
+    {
+        path: '/IPLocation',
+        name: 'IPLocation',
+        component: IPLocation
     },
     {
         path: '/About',

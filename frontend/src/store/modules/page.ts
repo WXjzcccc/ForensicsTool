@@ -8,6 +8,8 @@ interface PageDataState {
   bruteForceStore: any | null;
   timestampStore: any | null;
   fileReaderStore: any | null;
+  ipLocationStore: any | null;
+  isCardCollapsed: boolean | null;
 }
 
 export const usePageDataStore = defineStore('pageData', {
@@ -19,6 +21,8 @@ export const usePageDataStore = defineStore('pageData', {
     bruteForceStore: null,
     timestampStore: null,
     fileReaderStore: null,
+    ipLocationStore: null,
+    isCardCollapsed: null,
   }),
   actions: {
     saveKeyCalculationData(data: any) {
@@ -42,6 +46,9 @@ export const usePageDataStore = defineStore('pageData', {
     saveFileReaderData(data: any) {
       this.fileReaderStore = data;
     },
+    saveIPLocationData(data: any) {
+      this.ipLocationStore = data;
+    },
     // 获取爆破状态
     getBruteForceCrackingState(): boolean {
       return this.bruteForceStore?.cracking || false;
@@ -52,6 +59,14 @@ export const usePageDataStore = defineStore('pageData', {
         this.bruteForceStore = {};
       }
       this.bruteForceStore.cracking = cracking;
+    },
+    // 设置卡片折叠状态
+    setCardCollapsed(collapsed: boolean) {
+      this.isCardCollapsed = collapsed;
+    },
+    // 获取卡片折叠状态
+    getCardCollapsed(): boolean {
+      return this.isCardCollapsed || false;
     }
   },
 });

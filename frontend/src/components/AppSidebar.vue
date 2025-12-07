@@ -103,6 +103,12 @@ const menuItems = ref([
         name: 'FileReader'
     },
     {
+        label: 'IP归属地查询',
+        icon: 'pi pi-globe',
+        command: () => navigateTo('/IPLocation'),
+        name: 'IPLocation'
+    },
+    {
         label: '关于',
         icon: 'pi pi-info-circle',
         command: () => navigateTo('/About'),
