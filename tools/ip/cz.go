@@ -66,6 +66,10 @@ func (i *IP) LoadDB() error {
 
 // CheckUpdate 检查IP库是否有更新
 func (i *IP) CheckUpdate() bool {
+	if i.version == "" {
+		logger.Info("【IP】无本地纯真IP库")
+		return true
+	}
 	req, _ := http.NewRequest("GET", tag_api, nil)
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)

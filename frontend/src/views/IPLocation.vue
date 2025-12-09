@@ -15,7 +15,7 @@
                 class="w-full"
                 fluid
               />
-              <label for="batch-ips">批量查询 (每行一个IP)</label>
+              <label for="batch-ips">批量查询 (每行一个IP，数据来源纯真IP数据库)</label>
             </FloatLabel>
           </div>
 
@@ -158,10 +158,12 @@ import FloatLabel from 'primevue/floatlabel';
 import Empty from '@/components/Empty.vue';
 import { useTableHeight } from '@/composables/useTableHeight.js';
 import { ClipboardSetText } from "../../wailsjs/runtime/runtime.js";
+import { useLayout } from '@/composables/useLayout';
 
 // 状态变量
 const toast = useToast();
 const store = usePageDataStore();
+const { isDarkMode, primary } = useLayout(); // 获取主题状态
 const batchIPs = ref(store.ipLocationStore?.formData?.batchIPs || '');
 const dbLoaded = ref(store.ipLocationStore?.dbLoaded || false);
 const dbUpdateAvailable = ref(store.ipLocationStore?.dbUpdateAvailable || false);
@@ -252,14 +254,30 @@ const checkDatabase = () => {
     .then((hasUpdate) => {
       if (hasUpdate) {
         dbUpdateAvailable.value = true;
-        showMessage('info', '提示', '数据库有新版本可用');
+        showMessage('info', '提示', '数据库有新版本可用，请点击更新按钮下载');
+      } else {
+        showMessage('info', '提示', '数据库已是最新版本');
       }
     })
     .catch((error) => {
       dbLoaded.value = false;
       showMessage('error', '错误', `数据库检查失败: ${error}`);
-      // 尝试加载数据库
-      loadDatabase();
+      // 检查数据库失败时，直接检查更新
+      return CheckUpdate();
+    })
+    .then((hasUpdate) => {
+      // 如果是catch分支过来的，这里会检查是否有更新
+      if (hasUpdate !== undefined) {
+        if (hasUpdate) {
+          dbUpdateAvailable.value = true;
+          showMessage('info', '提示', '数据库有新版本可用，请点击更新按钮下载');
+        } else {
+          showMessage('info', '提示', '数据库检查失败，但无可用更新');
+        }
+      }
+    })
+    .catch((error) => {
+      showMessage('error', '错误', `检查更新失败: ${error}`);
     })
     .finally(() => {
       loading.value.checkDB = false;
@@ -373,17 +391,87 @@ const initMap = () => {
   fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json')
     .then((response) => response.json())
     .then((mapData) => {
+      // 注册地图数据
       echarts.registerMap('china', mapData);
+      
+      // 根据主题设置颜色
+      const isDark = isDarkMode.value;
+      const primaryColor = primary.value;
+      
+      // 定义主题颜色
+      const getThemeColors = () => {
+        if (isDark) {
+          // 深色主题颜色
+          return {
+            bgColors: ['#1e3a8a', '#1e40af', '#2563eb', '#3b82f6', '#60a5fa'],
+            textColor: '#e5e7eb',
+            titleColor: '#f3f4f6',
+            graphicColor: '#9ca3af'
+          };
+        } else {
+          // 浅色主题颜色
+          return {
+            bgColors: ['#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9'],
+            textColor: '#374151',
+            titleColor: '#111827',
+            graphicColor: '#6b7280'
+          };
+        }
+      };
+      
+      const themeColors = getThemeColors();
       
       // 设置初始地图选项
       const option = {
+        backgroundColor: 'transparent',
         title: {
           text: 'IP归属地分布',
-          left: 'center'
+          left: 'center',
+          textStyle: {
+            color: themeColors.titleColor
+          }
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{b}: {c} 个IP'
+          formatter: function(params) {
+            // 如果值为0或undefined，不显示
+            if (!params.value || params.value === 0) {
+              return `${params.name}: 暂无数据`;
+            }
+            return `${params.name}: ${params.value} 个IP`;
+          },
+          backgroundColor: isDark ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          borderColor: isDark ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+          textStyle: {
+            color: themeColors.textColor
+          }
+        },
+        visualMap: {
+          min: 0,
+          max: 10,
+          left: 'left',
+          top: 'bottom',
+          text: ['高', '低'],
+          calculable: true,
+          textStyle: {
+            color: themeColors.textColor
+          },
+          inRange: {
+            color: themeColors.bgColors
+          },
+          handleStyle: {
+            color: isDark ? '#4b5563' : '#d1d5db'
+          }
+        },
+        graphic: {
+          type: 'text',
+          right: 10,
+          bottom: 10,
+          style: {
+            text: '地图数据来源：阿里DataV平台',
+            fontSize: 12,
+            fill: themeColors.graphicColor
+          }
         },
         series: [
           {
@@ -393,16 +481,43 @@ const initMap = () => {
             roam: true,
             emphasis: {
               label: {
-                show: true
+                show: true,
+                color: themeColors.textColor
+              },
+              itemStyle: {
+                areaColor: isDark ? '#374151' : '#f3f4f6'
               }
             },
-            data: []
+            select: {
+              label: {
+                color: themeColors.textColor
+              },
+              itemStyle: {
+                areaColor: isDark ? '#4b5563' : '#e5e7eb'
+              }
+            },
+            itemStyle: {
+              areaColor: isDark ? '#1f2937' : '#f9fafb',
+              borderColor: isDark ? '#374151' : '#d1d5db'
+            },
+            data: [],
+            // 存储地图区域数据，用于后续匹配
+            mapData: mapData.features.map(feature => ({
+              name: feature.properties.name,
+              adcode: feature.properties.adcode,
+              level: feature.properties.level
+            }))
           }
         ]
       };
       
       chartInstance.value.setOption(option);
       mapInitialized.value = true;
+      
+      // 如果已有搜索结果，更新地图数据
+      if (searchResults.value.length > 0) {
+        updateMapData();
+      }
     })
     .catch((error) => {
       console.error('地图数据加载失败:', error);
@@ -417,31 +532,110 @@ const initMap = () => {
 const updateMapData = () => {
   if (!chartInstance.value || !searchResults.value.length) return;
   
-  // 统计各城市的IP数量
+  // 统计各城市/区县的IP数量
   const cityStats = {};
+  // 中国的直辖市列表
+  const municipalities = ['北京市', '天津市', '上海市', '重庆市'];
+  // 直辖市简称列表
+  const municipalityShortNames = ['北京', '天津', '上海', '重庆'];
+  
   searchResults.value.forEach(item => {
     if (item.city_name) {
-      cityStats[item.city_name] = (cityStats[item.city_name] || 0) + 1;
+      // 处理直辖市情况
+      let targetCity = null;
+      
+      // 检查是否是直辖市（全称或简称）
+      const isMunicipality = municipalities.includes(item.region_name) || 
+                             municipalityShortNames.includes(item.region_name);
+      
+      if (isMunicipality) {
+        // 如果是直辖市，优先使用city_name（区县）
+        // 因为地图数据中直辖市区域只显示区县
+        targetCity = item.district_name;
+      } else if (item.city_name && item.city_name !== item.region_name) {
+        // 如果city_name和region_name不同，可能是直辖市的区县
+        // 检查region_name是否是直辖市
+        const regionIsMunicipality = municipalities.includes(item.region_name) || 
+                                    municipalityShortNames.includes(item.region_name);
+        
+        if (regionIsMunicipality) {
+          // 如果region_name是直辖市，则使用city_name（区县）
+          targetCity = item.district_name;
+        } else {
+          // 否则使用city_name
+          targetCity = item.city_name;
+        }
+      } else {
+        // 其他情况使用city_name
+        targetCity = item.city_name;
+      }
+      
+      // 统计到目标城市/区县
+      if (targetCity) {
+        cityStats[targetCity] = (cityStats[targetCity] || 0) + 1;
+      }
     }
   });
   
-  // 转换为ECharts数据格式
+  // 获取地图中的所有区域名称
+  const mapOption = chartInstance.value.getOption();
+  const mapRegions = mapOption.series[0].mapData || [];
+  const regionNames = mapRegions.map(region => region.name);
+  
+  // 创建城市名称映射表，处理可能的名称差异
+  const cityMapping = {};
+  // 直辖市名称映射表 - 这里不需要将区县映射到直辖市
+  // 因为地图数据中直辖市区域只显示区县
+  
+  // 尝试匹配城市名称
+  Object.keys(cityStats).forEach(cityName => {
+    // 直接匹配
+    if (regionNames.includes(cityName)) {
+      cityMapping[cityName] = cityName;
+    } else {
+      // 尝试模糊匹配
+      const matchedRegion = regionNames.find(region => 
+        region.includes(cityName) || cityName.includes(region)
+      );
+      if (matchedRegion) {
+        cityMapping[cityName] = matchedRegion;
+      } else {
+        // 如果没有匹配，使用原始名称
+        cityMapping[cityName] = cityName;
+      }
+    }
+  });
+  
+  // 转换为ECharts数据格式，使用映射后的名称
   const mapData = Object.entries(cityStats).map(([name, value]) => ({
-    name,
-    value
+    name: cityMapping[name] || name,
+    value: value || 0  // 确保值不为undefined或NaN
   }));
+  
+  // 过滤掉值为0的数据项，避免在地图上显示"暂无数据"
+  const filteredMapData = mapData.filter(item => item.value > 0);
+  
+  console.log('城市统计数据:', cityStats);
+  console.log('地图区域名称:', regionNames);
+  console.log('城市名称映射:', cityMapping);
+  console.log('地图数据:', filteredMapData);
   
   // 更新地图
   chartInstance.value.setOption({
     series: [
       {
-        data: mapData
+        data: filteredMapData
       }
     ],
     visualMap: {
-      max: Math.max(...mapData.map(item => item.value), 10)
+      max: Math.max(...filteredMapData.map(item => item.value), 10)
     }
   });
+  
+  // 保存地图区域数据到全局变量，以便后续使用
+  if (!window.mapRegions) {
+    window.mapRegions = mapRegions;
+  }
 };
 
 // 监听搜索结果变化，更新地图
@@ -450,6 +644,42 @@ watch(searchResults, () => {
     nextTick(() => {
       updateMapData();
     });
+  }
+});
+
+// 监听主题变化，重新初始化地图
+watch([isDarkMode, primary], () => {
+  if (viewMode.value === 'map' && mapInitialized.value) {
+    // 保存当前地图数据
+    const currentOption = chartInstance.value.getOption();
+    const currentData = currentOption.series[0].data;
+    
+    // 重新初始化地图
+    mapInitialized.value = false;
+    initMap();
+    
+    // 等待地图初始化完成后恢复数据
+    nextTick(() => {
+      setTimeout(() => {
+        if (chartInstance.value && currentData.length > 0) {
+          chartInstance.value.setOption({
+            series: [{
+              data: currentData
+            }]
+          });
+        }
+      }, 500);
+    });
+  }
+});
+
+// 监听窗口大小变化，在地图视图下重新计算高度
+watch(() => tableScrollHeight.value, () => {
+  if (viewMode.value === 'map' && chartInstance.value) {
+    // 延迟执行，确保DOM已更新
+    setTimeout(() => {
+      chartInstance.value.resize();
+    }, 100);
   }
 });
 
@@ -473,6 +703,8 @@ watch(viewMode, (newMode, oldMode) => {
       } else if (chartInstance.value) {
         updateMapData();
       }
+      // 切换到地图视图后重新计算地图高度
+      calculateTableHeight();
     });
   }
   // 如果从地图视图切换到表格视图，销毁地图实例以释放资源
@@ -491,9 +723,10 @@ watch(viewMode, (newMode, oldMode) => {
 </script>
 
 <style scoped>
+/* 地图容器样式 */
 .map-container {
   width: 100%;
-  height: 500px;
+  height: v-bind(tableScrollHeight);
   position: relative;
 }
 
@@ -520,117 +753,15 @@ watch(viewMode, (newMode, oldMode) => {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-/* 视图控制区域样式 */
-.view-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--surface-card);
-  border-top: 1px solid var(--surface-border);
-  border-bottom: 1px solid var(--surface-border);
-  padding: 0.5rem 1rem;
-}
-
-/* 视图切换按钮组样式 */
-.view-switch-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* 折叠按钮样式 */
-.collapse-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 30px;
-  height: 30px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.collapse-button:hover {
-  background-color: var(--surface-hover);
-}
-
-.collapse-button i {
-  font-size: 0.8rem;
-  color: var(--text-color-secondary);
-}
-
-/* 卡片收起状态样式 */
+/* 卡片过渡效果 */
 .form-card {
   transition: all 0.3s ease;
   overflow: hidden;
   margin-bottom: 0;
 }
 
-.form-card.collapsed {
-  height: 0;
-  opacity: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
 .card-content {
   transition: all 0.3s ease;
-  max-height: 500px;
-  opacity: 1;
-}
-
-.card-content.collapsed-content {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-}
-
-/* 按钮行样式 */
-.button-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.button-item {
-  flex: 1;
-  min-width: 120px;
-}
-
-/* 固定表头宽度样式 */
-.fixed-header-table .p-datatable-thead > tr > th {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 10 !important;
-  background-color: var(--surface-card) !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-  min-width: inherit !important;
-  max-width: inherit !important;
-  width: inherit !important;
-}
-
-.fixed-header-table .p-datatable-tbody > tr > td {
-  min-width: inherit !important;
-  max-width: inherit !important;
-  width: inherit !important;
-}
-
-/* 确保表格在滚动时列宽保持一致 */
-.fixed-header-table .p-datatable-scrollable-header {
-  overflow: hidden !important;
-}
-
-.fixed-header-table .p-datatable-scrollable-body {
-  overflow: auto !important;
-}
-
-/* 防止内容溢出 */
-.fixed-header-table .p-datatable-scrollable-body td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* 响应式设计 */

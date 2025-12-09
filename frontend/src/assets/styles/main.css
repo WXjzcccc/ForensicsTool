@@ -1313,3 +1313,97 @@ html, body {
 .p-dark .p-progressbar-label {
     color: var(--p-surface-300) !important;
 }
+
+/* 视图控制区域样式 */
+.view-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--surface-card);
+    border-top: 1px solid var(--surface-border);
+    border-bottom: 1px solid var(--surface-border);
+}
+
+/* 视图切换按钮组样式 */
+.view-switch-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* 折叠按钮样式 */
+.collapse-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.collapse-button:hover {
+    background-color: var(--surface-hover);
+}
+
+.collapse-button i {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+}
+
+/* 卡片收起状态样式 */
+.form-card.collapsed {
+    height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.card-content.collapsed-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* 按钮行样式 */
+.button-item {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* 固定表头宽度样式 */
+.fixed-header-table .p-datatable-thead > tr > th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background-color: var(--surface-card) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    min-width: inherit !important;
+    max-width: inherit !important;
+    width: inherit !important;
+}
+
+.fixed-header-table .p-datatable-tbody > tr > td {
+    min-width: inherit !important;
+    max-width: inherit !important;
+    width: inherit !important;
+}
+
+/* 确保表格在滚动时列宽保持一致 */
+.fixed-header-table .p-datatable-scrollable-header {
+    overflow: hidden !important;
+}
+
+.fixed-header-table .p-datatable-scrollable-body {
+    overflow: auto !important;
+}
+
+/* 防止内容溢出 */
+.fixed-header-table .p-datatable-scrollable-body td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
