@@ -3,40 +3,31 @@
         <Menu :model="menuItems" class="sidebar-menu">
             <template #start>
                 <div class="sidebar-header">
-                    <Button 
-                        @click="toggleSidebar" 
-                        class="toggle-button"
-                        :icon="isCollapsed ? 'pi pi-bars' : 'pi pi-bars'"
-                        text
-                    />
+                    <Button @click="toggleSidebar" class="toggle-button"
+                        :icon="isCollapsed ? 'pi pi-bars' : 'pi pi-bars'" text />
                 </div>
             </template>
-            
+
             <template #item="{ item, props }">
-                <a v-ripple class="menu-link" v-bind="props.action" @click="navigateTo(item.route)" 
+                <a v-ripple class="menu-link" v-bind="props.action" @click="navigateTo(item.route)"
                     :class="{ 'active': $route.name === item.name }">
                     <span :class="item.icon" />
                     <span v-if="!isCollapsed">{{ item.label }}</span>
                 </a>
             </template>
-            
+
             <template #end>
                 <div class="sidebar-footer" style="--wails-draggable: no-drag;">
-                    <Button 
-                        v-if="!isCollapsed"
-                        @click="drawerVisible = true" 
-                        text
-                    >  {{ version }}    </Button>
-                    <Button v-else
-                        @click="drawerVisible = true" 
-                        icon="pi pi-info-circle"
-                        text/>
+                    <Button v-if="!isCollapsed" @click="drawerVisible = true" text> {{ version }} </Button>
+                    <Button v-else @click="drawerVisible = true" icon="pi pi-info-circle" text />
                 </div>
             </template>
         </Menu>
     </div>
     <Drawer v-model:visible="drawerVisible" header="小Tips" position="right" class="sidebar-tips">
-        <Message size="small">1.小红书，密码为xhsdev，选择sqlcipher3直接解密</Message>
+        <Message size="small">
+            1.小红书，密码为xhsdev或mmkv文件com.xingin.xhs_preferences中msg_db_password_updated的值，选择sqlcipher3直接解密
+        </Message>
         <Message size="small">2.微信的imei，现在可以通过files/KeyInfo.bin获取了，需要解密文件，算法为RC4，密钥为_wEcHAT_</Message>
         <Message size="small">3.MosGram(泡泡)，密码为cust_id的md5值，在sp目录的account_config.xml文件中，使用SQLCipher4参数解</Message>
         <Message size="small">4.悟空IM系列的聊天数据库，数据库名为wk_用户ID.db，解密密码即为用户ID，使用SQLCipher4参数解密</Message>
@@ -142,11 +133,11 @@ const updateWindowWidth = () => {
 onMounted(() => {
     updateWindowWidth();
     window.addEventListener('resize', updateWindowWidth);
-    nextTick(()=>{
+    nextTick(() => {
         if (GetVersion == undefined) {
             version.value = '1.0.0'
-        }else{
-            GetVersion().then(res=>{
+        } else {
+            GetVersion().then(res => {
                 version.value = res
             })
         }
