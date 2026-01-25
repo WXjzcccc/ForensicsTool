@@ -27,14 +27,18 @@ type CZIP struct {
 }
 
 type IP struct {
-	ctx     context.Context
-	dbPath  string
-	db      *ipdb.City
-	version string
+	ctx        context.Context
+	dbPath     string
+	db         *ipdb.City
+	version    string
+	newVersion string
 }
 
 const tag_api = "https://api.github.com/repos/nmgliangwei/qqwry.ipdb/tags"
+
+// db_url gitmirror有时候会抽风没法访问（即使架了梯子）
 const db_url = "https://raw.gitmirror.com/nmgliangwei/qqwry.ipdb/main/qqwry.ipdb"
+const db_release_url = "https://github.com/nmgliangwei/qqwry.ipdb/releases/download/%s/qqwry.ipdb"
 const (
 	IPNewVersionEvent    = "ForensicsTool::IP::NewVersion"
 	IPUpdateStartEvent   = "ForensicsTool::IP::UpdateStart"
@@ -43,7 +47,7 @@ const (
 )
 
 func NewIP() *IP {
-	return &IP{dbPath: "qqwry.ipdb"}
+	return &IP{dbPath: "qqwry.ipdb", newVersion: "2025-11-19"}
 }
 
 func (i *IP) InitCtx(ctx context.Context) {
@@ -66,10 +70,6 @@ func (i *IP) LoadDB() error {
 
 // CheckUpdate 检查IP库是否有更新
 func (i *IP) CheckUpdate() bool {
-	if i.version == "" {
-		logger.Info("【IP】无本地纯真IP库")
-		return true
-	}
 	req, _ := http.NewRequest("GET", tag_api, nil)
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Do(req)
@@ -99,6 +99,13 @@ func (i *IP) CheckUpdate() bool {
 	if tag != i.version {
 		logger.Infof("【IP】纯真IP库存在新版本：%s", tag)
 		// runtime.EventsEmit(i.ctx, IPUpdateEvent, tag)
+		i.newVersion = tag
+		return true
+	}
+
+	if i.version == "" {
+		logger.Info("【IP】无本地纯真IP库")
+		i.newVersion = tag
 		return true
 	}
 
@@ -108,7 +115,7 @@ func (i *IP) CheckUpdate() bool {
 // UpdateDB 更新IP库，失败返回错误
 func (i *IP) UpdateDB() error {
 	// runtime.EventsEmit(i.ctx, IPUpdateStartEvent, "开始下载")
-	resp, err := http.Get(db_url)
+	resp, err := http.Get(fmt.Sprintf(db_release_url, i.newVersion))
 	if err != nil {
 		logger.Error("【IP】下载纯真IP库失败")
 		// runtime.EventsEmit(i.ctx, IPUpdateErrorEvent, "下载失败")
