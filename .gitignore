@@ -7,3 +7,4 @@ logs
 *.log
 .trae
 *.ipdb
+AGENTS.md

@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
+
+	"github.com/OneOfOne/xxhash"
 )
 
 // HashType 定义哈希算法类型
@@ -82,4 +84,10 @@ func SHA256Hash(data interface{}) []byte {
 // SHA256HashHex 计算SHA256哈希值并返回16进制字符串
 func SHA256HashHex(data interface{}) string {
 	return HashHex(data, SHA256)
+}
+
+func XXHash32(data []byte, seed uint32) uint32 {
+	xxhash32 := xxhash.NewS32(seed)
+	xxhash32.Write(data)
+	return xxhash32.Sum32()
 }

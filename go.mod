@@ -3,6 +3,7 @@ module ForensicsTool
 go 1.25
 
 require (
+	github.com/OneOfOne/xxhash v1.2.8
 	github.com/WXjzcccc/go-mmkv v0.0.1
 	github.com/WXjzcccc/go-sqlcipher v0.1.1
 	github.com/WXjzcccc/registry v0.1.3

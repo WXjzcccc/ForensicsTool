@@ -1,3 +1,5 @@
+github.com/OneOfOne/xxhash v1.2.8 h1:31czK/TI9sNkxIKfaUfGlU47BAxQ0ztGgd9vPyqimf8=
+github.com/OneOfOne/xxhash v1.2.8/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/WXjzcccc/go-mmkv v0.0.1 h1:Hs+dxhAERU5ftx74ouLUPljRf3Y3tk9C8tF0VLhjP58=
 github.com/WXjzcccc/go-mmkv v0.0.1/go.mod h1:Hgt/AtukRIGI8Zrd5ORrtlur4BbfJ8vReaDJLjDDbT0=
 github.com/WXjzcccc/go-sqlcipher v0.1.1 h1:ZlBgzaTjlebNEflcZVSFPQZFzejlBN/FYu9i9pzJPm0=

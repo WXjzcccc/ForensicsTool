@@ -4,6 +4,7 @@ import (
 	"ForensicsTool/utils"
 	"context"
 	"crypto/aes"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -126,4 +127,27 @@ func (p *PasswdCalc) CalTiktok(uid string) []string {
 	*/
 	en := fmt.Sprintf("byte%simwcdb%sdance", uid, uid)
 	return []string{en, "使用wcdb进行解密"}
+}
+
+func longToBytes(uid int64) []byte {
+	bytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(bytes, uint64(uid))
+	return bytes
+}
+
+func (p *PasswdCalc) CalBatChat(uid string) []string {
+	/*
+		 * @param uid: 用户id，数据库名中的数字
+			@return: 蝙蝠聊天数据库的解密密钥
+	*/
+	long_uid, err := strconv.ParseInt(uid, 10, 64)
+	if err != nil {
+		return []string{"", "uid不合法，应该是一串数字！"}
+	}
+	sd := -1756908916
+	seed := uint32(sd)
+	xxhash32_result := utils.XXHash32(longToBytes(long_uid), seed)
+	fmt.Println(xxhash32_result)
+	pwd := utils.MD5HashHex(string(rune(xxhash32_result)) + uid)
+	return []string{strings.ToUpper(pwd), "使用wcdb进行解密"}
 }
